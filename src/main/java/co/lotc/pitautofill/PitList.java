@@ -1,5 +1,6 @@
 package co.lotc.pitautofill;
 
+import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -71,6 +72,23 @@ public class PitList {
 		if (thisPit != null) {
 			output = thisPit.fill();
 		}
+		return output;
+	}
+
+	// Retrieves a string list of stored pits.
+	public static String getList() {
+		String output = ChatColor.WHITE + "";
+		boolean firstName = true;
+
+		for (ResourcePit pit : allPitsList) {
+			if (firstName) {
+				output += pit.getName();
+				firstName = false;
+			} else {
+				output += ", " + pit.getName();
+			}
+		}
+
 		return output;
 	}
 

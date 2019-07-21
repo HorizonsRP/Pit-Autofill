@@ -57,7 +57,7 @@ public class ResourcePit {
 		if (worldRegions != null && worldRegions.hasRegion(regionName)) {
 			region = worldRegions.getRegion(regionName);
 			world = givenWorld;
-			output = "The pit '" + name + "' now uses the region '" + regionName + "'.";
+			output = "The pit '" + name + "' has been assigned the region '" + regionName + "'.";
 		}
 
 		return output;
@@ -70,7 +70,7 @@ public class ResourcePit {
 	 */
 	public String setBlockTypes(String[] blockAndChance) {
 
-		String output = "Successfully updated the pit blocktypes.";
+		String output = "Successfully updated the pit block types.";
 		HashMap<Material, Integer> newBlockTypes = new HashMap<>();
 
 		for (String arg : blockAndChance) {

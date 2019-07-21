@@ -79,4 +79,11 @@ public class Pit extends BaseCommand {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.fillPit(name));
 	}
 
+
+	// Provides a list of saved pits.
+	@Cmd(value="List of existing pits.", permission="pit.info")
+	public void list(CommandSender sender) {
+		sender.sendMessage(PitAutofill.PREFIX + "Pits: " + PitList.getList());
+	}
+
 }
