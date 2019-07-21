@@ -68,40 +68,42 @@ public class ResourcePit {
 	 * Assumes the format to be as block:chance where chance is chance%
 	 * of that type being placed.
 	 */
-	public void setBlockTypes(String[] blockAndChance) {
+	public String setBlockTypes(String[] blockAndChance) {
 
-		// Create a blank hashmap.
+		String output = "Successfully updated the pit blocktypes.";
 		HashMap<Material, Integer> newBlockTypes = new HashMap<>();
 
 		for (String arg : blockAndChance) {
 
-			// Get the index of our divider ":"
 			int chanceIndex = arg.indexOf(":");
-			// Initialize our block values.
+
 			String type;
 			int chance = 100;
 
-			// If we have an index value we assign the first substring and try to parseInt the second.
+			// Default our parseInt to 100 if it doesn't work.
 			if (chanceIndex != -1) {
 				type = arg.substring(0, chanceIndex);
 				try {
 					chance = Integer.parseInt(arg.substring(chanceIndex+1));
-				} catch(NumberFormatException nfe) {
+				} catch (NumberFormatException nfe) {
 					chance = 100;
 				}
-				// Otherwise we assume the entire string is the block type and leave chance at -1.
 			} else {
 				type = arg;
 			}
-			// Grab the matching material and link it with the chance on our blockTypes hashmap.
-			newBlockTypes.put(Material.matchMaterial(type), chance);
+
+			Material thisMaterial = Material.matchMaterial(type);
+			if (thisMaterial != null)
+				newBlockTypes.put(thisMaterial, chance);
 		}
 
-		// If we got a blockType set of at least one we assign it now.
 		if (newBlockTypes.keySet().size() > 0) {
 			blockTypes = newBlockTypes;
+		} else {
+			output = "Please specify the blocks and their chances.";
 		}
 
+		return output;
 	}
 
 

@@ -51,13 +51,13 @@ public class PitList {
 	}
 
 	// Sets the given pit's block types.
-	public static String setPitBlocks(String name) {
+	public static String setPitBlocks(String name, String[] blockTypes) {
 
 		String output = noPitFoundMsg(name);
 
 		ResourcePit thisPit = getPit(name);
 		if (thisPit != null) {
-			// TODO: Parse block info and pass it to the region.
+			output = thisPit.setBlockTypes(blockTypes);
 		}
 		return output;
 	}

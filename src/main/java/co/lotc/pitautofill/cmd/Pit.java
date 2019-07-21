@@ -68,9 +68,8 @@ public class Pit extends BaseCommand {
 
 	// Sets the pit's block types.
 	@Cmd(value="Set the given pit's block types by ##%Block.", permission="pit.edit")
-	public void setblocks(CommandSender sender, String name) {
-		sender.sendMessage(PitAutofill.PREFIX + "Dummy text for setting block type.");
-		// TODO: Parse any number of strings after the pit's name as ##%Block (e.g. 50%Cobblestone).
+	public void setblocks(CommandSender sender, String name, String[] blocks) {
+		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitBlocks(name, blocks));
 	}
 
 
