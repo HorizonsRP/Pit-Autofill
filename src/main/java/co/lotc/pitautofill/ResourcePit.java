@@ -194,11 +194,7 @@ public class ResourcePit {
 		if (!playersAreInside()) {
 			if (Bukkit.getPluginManager().isPluginEnabled("LWC"))
 				removeLocks();
-			if (changeBlocks()) {
-				output = "The pit has been refilled.";
-			} else {
-				output = "No blocks or region specified for that pit.";
-			}
+			output = changeBlocks();
 		} else {
 			output = "There are still players inside the pit.";
 		}
@@ -247,40 +243,38 @@ public class ResourcePit {
 	 * higher than our random value. Once we do, set block location to the previous
 	 * material we checked.
 	 */
-	private boolean changeBlocks() {
-		boolean output = true;
+	private String changeBlocks() {
+		String output = "The pit has been refilled.";
 
-		for (Location loc : getBlockLocationList()) {
-			// Initialize our random value and the running total of this location.
-			double randomChance = Math.random();
-			double currentTotal = 0;
+		if (region != null) {
+			for (Location loc : getBlockLocationList()) {
 
-			// Run through our list of materials, checking their chances.
-			Material finalMat = null;
-			for(Material mat : getBlockList()) {
-				double blockChance = getBlockChance(mat);
+				double randomChance = Math.random();
+				double currentTotal = 0;
 
-				// If we're still in this loop and our total chance is
-				// greater than our random chance, then it has to be the
-				// current material.
-				if(blockChance + currentTotal >= randomChance) {
-					finalMat = mat;
-					break;
+				// Run through our list of materials and setting the block based on chance.
+				Material finalMat = null;
+				for (Material mat : getBlockList()) {
+					double blockChance = getBlockChance(mat);
+
+					if (blockChance + currentTotal >= randomChance) {
+						finalMat = mat;
+						break;
+					}
+
+					if (blockChance > 0)
+						currentTotal += blockChance;
 				}
 
-				// If we didn't find our finalMat, we add our current chance to
-				// the total so we can check the next section when we loop next.
-				if (blockChance > 0)
-					currentTotal += blockChance;
+				if (finalMat != null) {
+					loc.getBlock().setType(finalMat);
+				} else {
+					output = "No blocks specified for that pit.";
+					break;
+				}
 			}
-
-			// Set this location's block to our chosen material. If there is none, we return false.
-			if (finalMat != null) {
-				loc.getBlock().setType(finalMat);
-			} else {
-				output = false;
-				break;
-			}
+		} else {
+			output = "No region specified for that pit.";
 		}
 
 		return output;
