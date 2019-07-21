@@ -12,6 +12,14 @@ import co.lotc.pitautofill.BaseCommand;
 
 public class Pit extends BaseCommand {
 
+	/*
+	TODO LIST:
+	Save & Load existing pits.
+	Only fill a pit if it's below x% full OR Only replace blocks not on the list (Air, Chests, etc).
+	Maybe add a cooldown?
+	/pit info > Show info about the bit to sender.
+	 */
+
 	// PitAutofill Info
 	public void invoke(CommandSender sender) {
 		sender.sendMessage(PitAutofill.PREFIX + "Pit Autofill refills the resource pits on command. Use /help Pit-Autofill for more information.");

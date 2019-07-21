@@ -44,9 +44,7 @@ public class ResourcePit {
 		name = givenName;
 	}
 
-	/*
-	 * Sets the pit's region to a worldguard region with the given name, if found.
-	 */
+	// Sets the pit's region to a worldguard region with the given name, if found.
 	public String setRegion(String regionName, World givenWorld) {
 		String output = "Could not find a region with that name in that world.";
 
@@ -64,9 +62,9 @@ public class ResourcePit {
 	}
 
 	/*
-	 * Takes a set of strings as arguments to set the new block types.
-	 * Assumes the format to be as block:chance where chance is chance%
-	 * of that type being placed.
+	Takes a set of strings as arguments to set the new block types.
+	Assumes the format to be as block:chance where chance is chance%
+	of that type being placed.
 	 */
 	public String setBlockTypes(String[] blockAndChance) {
 
@@ -109,24 +107,17 @@ public class ResourcePit {
 
 	//// ACCESSORS ////
 
-	/*
-	 * Returns the pit's name string.
-	 */
+	// Returns the pit's name string.
 	public String getName() {
 		return name;
 	}
 
-	/*
-	 * Returns the pit's world.
-	 */
+	// Returns the pit's world.
 	public World getRegionWorld() {
 		return world;
 	}
 
-	/*
-	 * Returns an ArrayList of the pit's materials ordered from highest to
-	 * lowest chance.
-	 */
+	// Returns an ArrayList of the pit's materials ordered from highest to lowest chance.
 	public ArrayList<Material> getBlockList() {
 
 		// Create an output ArrayList and a dummy keySet so that we can edit it
@@ -163,10 +154,7 @@ public class ResourcePit {
 		return output;
 	}
 
-	/*
-	 * Returns the chance integer of the given material,
-	 * if it exists in this pit.
-	 */
+	// Returns the chance integer of the given material, if it exists in this pit.
 	public double getBlockChance(Material material) {
 		double output = -1;
 		if (blockTypes.get(material) != null)
@@ -174,9 +162,7 @@ public class ResourcePit {
 		return output;
 	}
 
-	/*
-	 * Returns the ArrayList of all block locations in this pit.
-	 */
+	// Returns the ArrayList of all block locations in this pit.
 	public ProtectedRegion getRegion() {
 		return region;
 	}
@@ -185,8 +171,8 @@ public class ResourcePit {
 	//// OPERATORS ////
 
 	/*
-	 * So long as there're no players in the pit, fill it. If there are
-	 * players, return a message to the sender as such.
+	So long as there're no players in the pit, fill it. If there are
+	players, return a message to the sender as such.
 	 */
 	public String fill() {
 
@@ -202,9 +188,7 @@ public class ResourcePit {
 		return output;
 	}
 
-	/*
-	 * Returns true if there are any players inside the pit.
-	 */
+	// Returns true if there are any players inside the pit.
 	private boolean playersAreInside() {
 		boolean output = false;
 
@@ -223,9 +207,7 @@ public class ResourcePit {
 		return output;
 	}
 
-	/*
-	 * Removes all block locks within the region.
-	 */
+	// Removes all block locks within the region.
 	private void removeLocks() {
 		// For each location in the region, if there's a lock, remove it.
 		/*for (Location loc : getBlockLocationList()) {
@@ -238,10 +220,10 @@ public class ResourcePit {
 	}
 
 	/*
-	 * Changes all blocks within the region to the current blocklist. We use
-	 * Math.random, going up through our list until we find a block chance that's
-	 * higher than our random value. Once we do, set block location to the previous
-	 * material we checked.
+	Changes all blocks within the region to the current blocklist. We use
+	Math.random, going up through our list until we find a block chance that's
+	higher than our random value. Once we do, set block location to the previous
+	material we checked.
 	 */
 	private String changeBlocks() {
 		String output = "The pit has been refilled.";
@@ -280,9 +262,7 @@ public class ResourcePit {
 		return output;
 	}
 
-	/*
-	 * Returns a list of the block locations found in this region.
-	 */
+	// Returns a list of the block locations found in this region.
 	private ArrayList<Location> getBlockLocationList() {
 		ArrayList<Location> output = new ArrayList<>();
 
@@ -294,11 +274,11 @@ public class ResourcePit {
 		for (int i = min.getBlockX(); i <= max.getBlockX(); i++) {
 			for (int j = min.getBlockY(); j <= max.getBlockY(); j++) {
 				for (int k = min.getBlockZ(); k <= max.getBlockZ(); k++) {
-					// Add each location to our output.
+
 					output.add(new Location(world, i, j, k));
 				}
 			}
-		}// block for
+		}
 
 		return output;
 	}
