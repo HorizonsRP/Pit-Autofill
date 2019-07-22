@@ -1,17 +1,15 @@
 package co.lotc.pitautofill;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.griefcraft.lwc.LWCPlugin;
-import com.griefcraft.model.Protection;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -19,6 +17,9 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 
 public class ResourcePit {
+
+	private static final float MAX_EMPTY_REFILL_VALUE = 0.3f; // The max % a pit can have when being filled.
+	private static final int DEFAULT_CHANCE_VALUE = 100;      // The default chance for a block if unspecified.
 
 	private String name;                           // The name/ID of the pit.
 	private String regionName;                     // The name/ID of the pit WorldGuard region.
@@ -84,7 +85,7 @@ public class ResourcePit {
 				try {
 					chance = Integer.parseInt(arg.substring(chanceIndex+1));
 				} catch (NumberFormatException nfe) {
-					chance = 100;
+					chance = DEFAULT_CHANCE_VALUE;
 				}
 			} else {
 				type = arg;
@@ -118,39 +119,28 @@ public class ResourcePit {
 	}
 
 	// Returns an ArrayList of the pit's materials ordered from highest to lowest chance.
-	public ArrayList<Material> getBlockList() {
+	public ArrayList<Material> getBlockChanceList() {
 
-		// Create an output ArrayList and a dummy keySet so that we can edit it
-		// without affecting our blockTypes HashMap.
 		ArrayList<Material> output = new ArrayList<>();
-		ArrayList<Material> keySet = new ArrayList<>();
-		for (Material key : blockTypes.keySet()) {
-			keySet.add(key);
-		}
+		ArrayList<Material> keySet = new ArrayList<>(blockTypes.keySet());
 
-		// Run through adding as many entries as we have blockTypes, sorting from
-		// highest to lowest chance.
 		while (keySet.size() > 0) {
 
 			Material highestChance = null;
 			for (Material mat : keySet) {
-				// Check to see if each mat's chance is higher than our highest chance.
 				if (highestChance != null) {
 					if (blockTypes.get(mat) > blockTypes.get(highestChance)) {
 						highestChance = mat;
 					}
-					// If our highestChance is still null, just set it to the first value.
 				} else {
 					highestChance = mat;
 				}
 			}
 
-			// Add our highestChance to our output and remove it from our temp list.
 			output.add(highestChance);
 			keySet.remove(highestChance);
 		}
 
-		//Send out our finalized list.
 		return output;
 	}
 
@@ -178,9 +168,20 @@ public class ResourcePit {
 
 		String output = "Pit Autofill Error. Please check with your administrator.";
 		if (!playersAreInside()) {
-			if (Bukkit.getPluginManager().isPluginEnabled("LWC"))
-				removeLocks();
-			output = changeBlocks();
+
+			float totalCount = 0;
+			float airCount = 0;
+			for (Location loc : getLocationList()) {
+				if (loc.getBlock().getType().equals(Material.AIR))
+					airCount++;
+				totalCount++;
+			}
+
+			if ((airCount / totalCount) < MAX_EMPTY_REFILL_VALUE) {
+				if (Bukkit.getPluginManager().isPluginEnabled("LWC"))
+					removeLocks();
+				output = changeBlocks();
+			}
 		} else {
 			output = "There are still players inside the pit.";
 		}
@@ -229,14 +230,14 @@ public class ResourcePit {
 		String output = "The pit has been refilled.";
 
 		if (region != null) {
-			for (Location loc : getBlockLocationList()) {
+			for (Location loc : getLocationList()) {
 
 				double randomChance = Math.random();
 				double currentTotal = 0;
 
 				// Run through our list of materials and setting the block based on chance.
 				Material finalMat = null;
-				for (Material mat : getBlockList()) {
+				for (Material mat : getBlockChanceList()) {
 					double blockChance = getBlockChance(mat);
 
 					if (blockChance + currentTotal >= randomChance) {
@@ -263,7 +264,7 @@ public class ResourcePit {
 	}
 
 	// Returns a list of the block locations found in this region.
-	private ArrayList<Location> getBlockLocationList() {
+	private ArrayList<Location> getLocationList() {
 		ArrayList<Location> output = new ArrayList<>();
 
 		// Grabs the min and max of our region.
