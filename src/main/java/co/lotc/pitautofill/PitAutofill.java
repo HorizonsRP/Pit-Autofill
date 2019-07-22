@@ -16,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class PitAutofill extends JavaPlugin {
 
     public static final String PREFIX = (ChatColor.GOLD + "");      // The same colouring prefix to be used throughout the plugin.
+    public static final String ALT_COLOUR = (ChatColor.WHITE + "");
     private static PitAutofill instance;
     public static PitAutofill get() { return instance; }            // Provides an accessor to our current instance.
 

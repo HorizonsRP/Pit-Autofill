@@ -23,7 +23,7 @@ public class PitList {
 	// Create a new pit with the given name and add to our list.
 	public static String newPit(String name) {
 		allPitsList.add(new ResourcePit(name));
-		return "Successfully created the pit '" + name + "'.";
+		return "Successfully created the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
 	}
 
 	// Remove the pit with the same name from our list.
@@ -34,7 +34,7 @@ public class PitList {
 		ResourcePit thisPit = getPit(name);
 		if (thisPit != null) {
 			allPitsList.remove(thisPit);
-			output = "Successfully deleted the pit '" + name + "'.";
+			output = "Successfully deleted the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
 		}
 		return output;
 	}
@@ -77,7 +77,7 @@ public class PitList {
 
 	// Retrieves a string list of stored pits.
 	public static String getList() {
-		String output = ChatColor.WHITE + "";
+		String output = PitAutofill.ALT_COLOUR + "";
 		boolean firstName = true;
 
 		for (ResourcePit pit : allPitsList) {
@@ -92,11 +92,8 @@ public class PitList {
 		return output;
 	}
 
-
-	//// PRIVATE ////
-
 	// Returns the ResourcePit with the matching name.
-	private static ResourcePit getPit(String name) {
+	public static ResourcePit getPit(String name) {
 
 		for (ResourcePit thisPit : allPitsList) {
 			if (thisPit.getName().equalsIgnoreCase(name))
@@ -105,9 +102,12 @@ public class PitList {
 		return null;
 	}
 
+
+	//// PRIVATE ////
+
 	// Returns the pit not found error message.
 	private static String noPitFoundMsg(String name) {
-		return "No pit found with the name '" + name + "'.";
+		return "No pit found with the name '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
 	}
 
 }

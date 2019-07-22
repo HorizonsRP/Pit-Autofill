@@ -3,7 +3,10 @@ package co.lotc.pitautofill.cmd;
 import co.lotc.core.command.annotate.Cmd;
 import co.lotc.pitautofill.PitAutofill;
 import co.lotc.pitautofill.PitList;
+import co.lotc.pitautofill.ResourcePit;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -16,7 +19,6 @@ public class Pit extends BaseCommand {
 	TODO LIST:
 	Save & Load existing pits.
 	Maybe add a cooldown?
-	/pit info > Show info about the bit to sender.
 	 */
 
 	// PitAutofill Info
@@ -25,12 +27,10 @@ public class Pit extends BaseCommand {
 	}
 
 
-	// Create new pit
-	@Cmd(value="Creates a new pit with given [name] {WorldGuard Region}", permission="pit.create")
+	@Cmd(value="Creates a new pit with given [name]", permission="pit.create")
 	public void create(CommandSender sender, String name) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.newPit(name));
 	}
-
 	@Cmd(value="Creates a new pit with given [name] {WorldGuard Region}", permission="pit.create")
 	public void create(CommandSender sender, String name, String regionName) {
 		if (sender instanceof Player) {
@@ -41,22 +41,13 @@ public class Pit extends BaseCommand {
 			sender.sendMessage(PitAutofill.PREFIX + "If you're creating from console, please specify a world name after the region name.");
 		}
 	}
-
-	@Cmd(value="Creates a new pit with given [name] {WorldGuard Region}", permission="pit.create")
+	@Cmd(value="Creates a new pit with given [name] {WorldGuard Region} {World Name}", permission="pit.create")
 	public void create(CommandSender sender, String name, String regionName, String worldName) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.newPit(name));
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, Bukkit.getWorld(worldName)) );
 	}
 
 
-	// Deletion of a pit
-	@Cmd(value="Premanently deletes a given pit.", permission="pit.edit")
-	public void delete(CommandSender sender, String name) {
-		sender.sendMessage(PitAutofill.PREFIX + PitList.deletePit(name));
-	}
-
-
-	// Sets the pit's worldguard region.
 	@Cmd(value="Set the given pit's WorldGuard region.", permission="pit.edit")
 	public void setregion(CommandSender sender, String name, String regionName) {
 		if (sender instanceof Player) {
@@ -66,31 +57,67 @@ public class Pit extends BaseCommand {
 			sender.sendMessage(PitAutofill.PREFIX + "If you're setting the region from console, please specify a world name after the region name.");
 		}
 	}
-
 	@Cmd(value="Set the given pit's WorldGuard region.", permission="pit.edit")
 	public void setregion(CommandSender sender, String name, String regionName, String worldName) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, Bukkit.getWorld(worldName)) );
 	}
 
 
-	// Sets the pit's block types.
-	@Cmd(value="Set the given pit's block types by ##%Block.", permission="pit.edit")
+	@Cmd(value="Premanently deletes a given pit.", permission="pit.edit")
+	public void delete(CommandSender sender, String name) {
+		sender.sendMessage(PitAutofill.PREFIX + PitList.deletePit(name));
+	}
+
+
+	@Cmd(value="Set the given pit's block types by Block:##.", permission="pit.edit")
 	public void setblocks(CommandSender sender, String name, String[] blocks) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitBlocks(name, blocks));
 	}
 
 
-	// Refills the given pit.
-	@Cmd(value="Refill the given pit.", permission="pit.edit")
+	@Cmd(value="Refills the given pit.", permission="pit.edit")
 	public void fill(CommandSender sender, String name) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.fillPit(name));
 	}
 
 
-	// Provides a list of saved pits.
-	@Cmd(value="List of existing pits.", permission="pit.info")
+	@Cmd(value="Provides a list of saved pits.", permission="pit.info")
 	public void list(CommandSender sender) {
 		sender.sendMessage(PitAutofill.PREFIX + "Pits: " + PitList.getList());
 	}
 
+
+	@Cmd(value="Provides info on the specified pit.", permission="pit.info")
+	public void info(CommandSender sender, String name) {
+
+		ResourcePit thisPit = PitList.getPit(name);
+
+		if (thisPit != null) {
+			String typeList = "None";
+			boolean first = true;
+
+			// Comma seperated list of each block.
+			for (Material mat : thisPit.getBlockChanceList()) {
+				if (first) {
+					typeList = thisPit.getBlockChance(mat) + "% " + mat.toString();
+					first = false;
+				} else {
+					typeList += ", " + thisPit.getBlockChance(mat) + "% " + mat.toString();
+				}
+			}
+
+			String message = (PitAutofill.PREFIX + ChatColor.BOLD + "Pit '" + name + "'" +
+							  PitAutofill.PREFIX + "\nBlock Types: " + PitAutofill.ALT_COLOUR + typeList +
+							  PitAutofill.PREFIX + "\nHas Region: " + PitAutofill.ALT_COLOUR + !thisPit.regionIsNull());
+
+			if (!thisPit.regionIsNull()) {
+				message += (PitAutofill.PREFIX + "\nRegion Name: " + PitAutofill.ALT_COLOUR + thisPit.getRegion().getId() +
+							PitAutofill.PREFIX + "\nWorld: " + PitAutofill.ALT_COLOUR + thisPit.getRegionWorld().getName());
+			}
+
+			sender.sendMessage(message);
+		} else {
+			sender.sendMessage(PitAutofill.PREFIX + "Please specify a pit.");
+		}
+	}
 }

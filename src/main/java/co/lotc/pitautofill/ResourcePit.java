@@ -21,11 +21,17 @@ public class ResourcePit {
 	private static final float MAX_EMPTY_REFILL_VALUE = 0.3f; // The max % a pit can have when being filled.
 	private static final int DEFAULT_CHANCE_VALUE = 100;      // The default chance for a block if unspecified.
 
-	private String name;                           // The name/ID of the pit.
-	private String regionName;                     // The name/ID of the pit WorldGuard region.
-	private World world;                           // Stores the world the region resides in.
-	private HashMap<Material, Integer> blockTypes; // Stored as block Material, chance Integer
-	private ProtectedRegion region;                // Stores the WorldGuard region.
+	private String name;                               // The name/ID of the pit.
+	private World world;                               // Stores the world the region resides in.
+	private HashMap<Material, Integer> blockTypes;     // Stored as block Material, chance Integer
+	private ProtectedRegion region;                    // Stores the WorldGuard region.
+
+	// One Liner Gets
+	public boolean regionIsNull() { return region == null; }
+	public ProtectedRegion getRegion() { return region; }
+	public String getRegionName() { return region.getId(); }
+	public World getRegionWorld() {	return world; }
+	public String getName() { return name; }
 
 
 	//// CONSTRUCTORS ////
@@ -56,7 +62,8 @@ public class ResourcePit {
 		if (worldRegions != null && worldRegions.hasRegion(regionName)) {
 			region = worldRegions.getRegion(regionName);
 			world = givenWorld;
-			output = "The pit '" + name + "' has been assigned the region '" + regionName + "'.";
+			output = "The pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "' has been assigned the region '" +
+					 PitAutofill.ALT_COLOUR + regionName + PitAutofill.PREFIX + "'.";
 		}
 
 		return output;
@@ -108,16 +115,6 @@ public class ResourcePit {
 
 	//// ACCESSORS ////
 
-	// Returns the pit's name string.
-	public String getName() {
-		return name;
-	}
-
-	// Returns the pit's world.
-	public World getRegionWorld() {
-		return world;
-	}
-
 	// Returns an ArrayList of the pit's materials ordered from highest to lowest chance.
 	public ArrayList<Material> getBlockChanceList() {
 
@@ -150,11 +147,6 @@ public class ResourcePit {
 		if (blockTypes.get(material) != null)
 			output = blockTypes.get(material) / 100.0;
 		return output;
-	}
-
-	// Returns the ArrayList of all block locations in this pit.
-	public ProtectedRegion getRegion() {
-		return region;
 	}
 
 
@@ -229,7 +221,7 @@ public class ResourcePit {
 	private String changeBlocks() {
 		String output = "The pit has been refilled.";
 
-		if (region != null) {
+		if (!regionIsNull()) {
 			for (Location loc : getLocationList()) {
 
 				double randomChance = Math.random();
