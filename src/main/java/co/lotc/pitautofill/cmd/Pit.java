@@ -4,6 +4,7 @@ import co.lotc.core.command.annotate.Cmd;
 import co.lotc.pitautofill.PitAutofill;
 import co.lotc.pitautofill.PitList;
 import co.lotc.pitautofill.ResourcePit;
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -102,13 +103,13 @@ public class Pit extends BaseCommand {
 					typeList = thisPit.getBlockChance(mat) + "% " + mat.toString();
 					first = false;
 				} else {
-					typeList += ", " + thisPit.getBlockChance(mat) + "% " + mat.toString();
+					typeList += ", " + (thisPit.getBlockChance(mat)*100) + "% " + mat.toString();
 				}
 			}
 
-			String message = (PitAutofill.PREFIX + ChatColor.BOLD + "Pit '" + name + "'" +
+			String message = (PitAutofill.ALT_COLOUR + ChatColor.BOLD + "Pit '" + name.toUpperCase() + "'" +
 							  PitAutofill.PREFIX + "\nBlock Types: " + PitAutofill.ALT_COLOUR + typeList +
-							  PitAutofill.PREFIX + "\nHas Region: " + PitAutofill.ALT_COLOUR + !thisPit.regionIsNull());
+							  PitAutofill.PREFIX + "\nHas Region: " + PitAutofill.ALT_COLOUR + WordUtils.capitalize(!thisPit.regionIsNull() + ""));
 
 			if (!thisPit.regionIsNull()) {
 				message += (PitAutofill.PREFIX + "\nRegion Name: " + PitAutofill.ALT_COLOUR + thisPit.getRegion().getId() +
@@ -117,7 +118,7 @@ public class Pit extends BaseCommand {
 
 			sender.sendMessage(message);
 		} else {
-			sender.sendMessage(PitAutofill.PREFIX + "Please specify a pit.");
+			sender.sendMessage(PitAutofill.PREFIX + "No pit found with the name '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.");
 		}
 	}
 }

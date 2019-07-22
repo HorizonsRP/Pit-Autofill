@@ -161,18 +161,20 @@ public class ResourcePit {
 		String output = "Pit Autofill Error. Please check with your administrator.";
 		if (!playersAreInside()) {
 
-			float totalCount = 0;
 			float airCount = 0;
+			float totalCount = 0;
 			for (Location loc : getLocationList()) {
-				if (loc.getBlock().getType().equals(Material.AIR))
-					airCount++;
-				totalCount++;
+				if (world.getBlockAt(loc).getType().equals(Material.AIR))
+					airCount += 1f;
+				totalCount += 1f;
 			}
 
 			if ((airCount / totalCount) < MAX_EMPTY_REFILL_VALUE) {
 				if (Bukkit.getPluginManager().isPluginEnabled("LWC"))
 					removeLocks();
 				output = changeBlocks();
+			} else {
+				output = "The pit is still too full. Please use what's currently there.";
 			}
 		} else {
 			output = "There are still players inside the pit.";
