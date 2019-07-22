@@ -15,7 +15,6 @@ public class Pit extends BaseCommand {
 	/*
 	TODO LIST:
 	Save & Load existing pits.
-	Only fill a pit if it's below x% full OR Only replace blocks not on the list (Air, Chests, etc).
 	Maybe add a cooldown?
 	/pit info > Show info about the bit to sender.
 	 */

@@ -79,7 +79,7 @@ public class ResourcePit {
 			String type;
 			int chance = 100;
 
-			// Default our parseInt to 100 if it doesn't work.
+			// Default our parseInt if it doesn't work.
 			if (chanceIndex != -1) {
 				type = arg.substring(0, chanceIndex);
 				try {
