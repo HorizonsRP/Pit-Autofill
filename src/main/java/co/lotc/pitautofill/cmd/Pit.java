@@ -109,9 +109,9 @@ public class Pit extends BaseCommand {
 
 			String message = (PitAutofill.ALT_COLOUR + ChatColor.BOLD + "Pit '" + name.toUpperCase() + "'" +
 							  PitAutofill.PREFIX + "\nBlock Types: " + PitAutofill.ALT_COLOUR + typeList +
-							  PitAutofill.PREFIX + "\nHas Region: " + PitAutofill.ALT_COLOUR + WordUtils.capitalize(!thisPit.regionIsNull() + ""));
+							  PitAutofill.PREFIX + "\nHas Region: " + PitAutofill.ALT_COLOUR + WordUtils.capitalize(thisPit.regionIsNotNull() + ""));
 
-			if (!thisPit.regionIsNull()) {
+			if (thisPit.regionIsNotNull()) {
 				message += (PitAutofill.PREFIX + "\nRegion Name: " + PitAutofill.ALT_COLOUR + thisPit.getRegion().getId() +
 							PitAutofill.PREFIX + "\nWorld: " + PitAutofill.ALT_COLOUR + thisPit.getRegionWorld().getName());
 			}

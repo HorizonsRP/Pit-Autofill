@@ -27,7 +27,7 @@ public class ResourcePit {
 	private ProtectedRegion region;                    // Stores the WorldGuard region.
 
 	// One Liner Gets
-	public boolean regionIsNull() { return region == null; }
+	public boolean regionIsNotNull() { return region != null; }
 	public ProtectedRegion getRegion() { return region; }
 	public String getRegionName() { return region.getId(); }
 	public World getRegionWorld() {	return world; }
@@ -159,12 +159,12 @@ public class ResourcePit {
 	public String fill() {
 
 		String output = "Pit Autofill Error. Please check with your administrator.";
-		if (!regionIsNull()) {
+		if (regionIsNotNull()) {
 			if (!playersAreInside()) {
 
 				float airCount = 0;
 				float totalCount = 0;
-				if (!regionIsNull()) {
+				if (regionIsNotNull()) {
 					for (Location loc : getLocationList()) {
 						if (world.getBlockAt(loc).getType().equals(Material.AIR))
 							airCount += 1f;
