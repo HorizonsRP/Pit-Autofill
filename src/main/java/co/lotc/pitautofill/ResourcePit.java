@@ -142,10 +142,10 @@ public class ResourcePit {
 	}
 
 	// Returns the chance integer of the given material, if it exists in this pit.
-	public double getBlockChance(Material material) {
-		double output = -1;
+	public int getBlockChance(Material material) {
+		int output = -1;
 		if (blockTypes.get(material) != null)
-			output = blockTypes.get(material) / 100.0;
+			output = blockTypes.get(material);
 		return output;
 	}
 
@@ -237,7 +237,7 @@ public class ResourcePit {
 			// Run through our list of materials and setting the block based on chance.
 			Material finalMat = null;
 			for (Material mat : getBlockChanceList()) {
-				double blockChance = getBlockChance(mat);
+				double blockChance = getBlockChance(mat)/100;
 
 				if (blockChance + currentTotal >= randomChance) {
 					finalMat = mat;
