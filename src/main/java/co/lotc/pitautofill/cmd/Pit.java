@@ -100,10 +100,10 @@ public class Pit extends BaseCommand {
 			// Comma seperated list of each block.
 			for (Material mat : thisPit.getBlockChanceList()) {
 				if (first) {
-					typeList = thisPit.getBlockChance(mat) + "% " + mat.toString();
+					typeList = (int) (thisPit.getBlockChance(mat)*100) + "% " + mat.toString();
 					first = false;
 				} else {
-					typeList += ", " + (thisPit.getBlockChance(mat)*100) + "% " + mat.toString();
+					typeList += ", " + (int) (thisPit.getBlockChance(mat)*100) + "% " + mat.toString();
 				}
 			}
 
