@@ -104,7 +104,7 @@ public class ResourcePit {
 		}
 
 		if (newBlockTypes.keySet().size() > 0) {
-			blockTypes = newBlockTypes;
+			blockTypes = checkChances(newBlockTypes);
 		} else {
 			output = "Please specify the blocks and their chances.";
 		}
@@ -159,27 +159,31 @@ public class ResourcePit {
 	public String fill() {
 
 		String output = "Pit Autofill Error. Please check with your administrator.";
-		if (!playersAreInside()) {
+		if (!regionIsNull()) {
+			if (!playersAreInside()) {
 
-			float airCount = 0;
-			float totalCount = 0;
-			if (!regionIsNull()) {
-				for (Location loc : getLocationList()) {
-					if (world.getBlockAt(loc).getType().equals(Material.AIR))
-						airCount += 1f;
-					totalCount += 1f;
+				float airCount = 0;
+				float totalCount = 0;
+				if (!regionIsNull()) {
+					for (Location loc : getLocationList()) {
+						if (world.getBlockAt(loc).getType().equals(Material.AIR))
+							airCount += 1f;
+						totalCount += 1f;
+					}
 				}
-			}
 
-			if ((1f - (airCount / totalCount)) < MAX_EMPTY_REFILL_VALUE) {
-				if (Bukkit.getPluginManager().isPluginEnabled("LWC"))
-					removeLocks();
-				output = changeBlocks();
+				if ((1f - (airCount / totalCount)) < MAX_EMPTY_REFILL_VALUE) {
+					if (Bukkit.getPluginManager().isPluginEnabled("LWC"))
+						removeLocks();
+					output = changeBlocks();
+				} else {
+					output = "The pit is still too full. Please use what's currently there.";
+				}
 			} else {
-				output = "The pit is still too full. Please use what's currently there.";
+				output = "There are still players inside the pit.";
 			}
 		} else {
-			output = "There are still players inside the pit.";
+			output = "No region specified for that pit.";
 		}
 
 		return output;
@@ -225,35 +229,31 @@ public class ResourcePit {
 	private String changeBlocks() {
 		String output = "The pit has been refilled.";
 
-		if (!regionIsNull()) {
-			for (Location loc : getLocationList()) {
+		for (Location loc : getLocationList()) {
 
-				double randomChance = Math.random();
-				double currentTotal = 0;
+			double randomChance = Math.random();
+			double currentTotal = 0;
 
-				// Run through our list of materials and setting the block based on chance.
-				Material finalMat = null;
-				for (Material mat : getBlockChanceList()) {
-					double blockChance = getBlockChance(mat);
+			// Run through our list of materials and setting the block based on chance.
+			Material finalMat = null;
+			for (Material mat : getBlockChanceList()) {
+				double blockChance = getBlockChance(mat);
 
-					if (blockChance + currentTotal >= randomChance) {
-						finalMat = mat;
-						break;
-					}
-
-					if (blockChance > 0)
-						currentTotal += blockChance;
-				}
-
-				if (finalMat != null) {
-					loc.getBlock().setType(finalMat);
-				} else {
-					output = "No blocks specified for that pit.";
+				if (blockChance + currentTotal >= randomChance) {
+					finalMat = mat;
 					break;
 				}
+
+				if (blockChance > 0)
+					currentTotal += blockChance;
 			}
-		} else {
-			output = "No region specified for that pit.";
+
+			if (finalMat != null) {
+				loc.getBlock().setType(finalMat);
+			} else {
+				output = "No blocks specified for that pit.";
+				break;
+			}
 		}
 
 		return output;
@@ -275,6 +275,22 @@ public class ResourcePit {
 					output.add(new Location(world, i, j, k));
 				}
 			}
+		}
+
+		return output;
+	}
+
+	// Makes sure the our chances total up to 100%.
+	private HashMap<Material, Integer> checkChances(HashMap<Material, Integer> input) {
+		HashMap<Material, Integer> output = new HashMap<>(input);
+
+		int total = 0;
+		for (int chance : output.values()) {
+			total += chance;
+		}
+
+		if (total < 100) {
+			output.put(Material.AIR, 100 - total);
 		}
 
 		return output;
