@@ -1,8 +1,10 @@
 package co.lotc.pitautofill;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -13,8 +15,38 @@ public class PitList {
 
 	//// STARTUP ////
 
+	// Iterate through our list of pits for each world, plugging in the required info if specified in the config.
 	public static void init() {
-		// TODO: Load pits from config.
+
+		FileConfiguration config = PitAutofill.get().getConfig();
+		for (String world : config.getConfigurationSection("pits").getKeys(false)) {
+			for (String pitName : config.getConfigurationSection("pits." + world).getKeys(false)) {
+
+				String regionName = config.getString("pits." + world + "." + pitName + ".regionName");
+				ArrayList<String> blockTypes = new ArrayList<>();
+
+				for (String block : config.getConfigurationSection("pits." + world + "." + pitName + ".blockTypes").getKeys(false)) {
+					blockTypes.add(block + ":" + config.getInt("pits." + world + "." + pitName + ".blockTypes." + block));
+				}
+
+
+				PitAutofill.get().getServer().getLogger().info(newPit(pitName));
+
+				if (regionName != null) {
+					PitAutofill.get().getServer().getLogger().info(setPitRegion(pitName, regionName, Bukkit.getWorld(world)));
+				}
+
+				if (blockTypes.size() > 0) {
+					String[] stringedBlockTypes = new String[blockTypes.size()];
+					for (int i = 0; i < stringedBlockTypes.length; i++) {
+						stringedBlockTypes[i] = blockTypes.get(i);
+					}
+
+					PitAutofill.get().getServer().getLogger().info(setPitBlocks(pitName, stringedBlockTypes));
+				}
+			}
+		}
+
 	}
 
 

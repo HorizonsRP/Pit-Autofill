@@ -1,10 +1,11 @@
 # Standard Format:
 #
-#worldName:
-#  pitName:
-#    regionName: 'String'
-#    blockTypes:
-#      block1:
-#        - chance
-#      block2:
-#        - chance
+#pits:
+#  worldName:
+#    pitName:
+#      regionName: 'String'
+#      blockTypes:
+#        block1:
+#          - chance
+#        block2:
+#          - chance

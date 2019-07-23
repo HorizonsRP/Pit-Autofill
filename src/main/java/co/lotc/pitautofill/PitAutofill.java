@@ -29,6 +29,8 @@ public class PitAutofill extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
 
+        PitList.init();
+
         Bukkit.getPluginManager().registerEvents(new FillSignListener(), this);
 
         Commands.build(getCommand("pit"), Pit::new);
