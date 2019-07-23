@@ -20,6 +20,10 @@ public class PitList {
 	public static void init() {
 
 		config = PitAutofill.get().getConfig();
+
+		if (config.getConfigurationSection("pits") == null)
+			config.createSection("pits");
+
 		for (String pitName : config.getConfigurationSection("pits").getKeys(false)) {
 
 			String regionName = config.getString("pits." + pitName + ".regionName");
@@ -34,7 +38,7 @@ public class PitList {
 			PitAutofill.get().getServer().getLogger().info("[Pit-Autofill] " + ChatColor.stripColor(newPit(pitName)));
 
 			if (regionName != null) {
-				setPitRegion(pitName, regionName, Bukkit.getWorld(worldName));
+				setPitRegion(pitName, regionName, worldName);
 			}
 
 			if (blockTypes.size() > 0) {
@@ -54,41 +58,48 @@ public class PitList {
 
 	// Create a new pit with the given name and add to our list.
 	public static String newPit(String name) {
-		allPitsList.add(new ResourcePit(name));
 
-		config.createSection("pits." + name);
-		PitAutofill.get().saveConfig();
+		String output = "A pit with that name already exists.";
 
-		return "Successfully created the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
+		if (getPit(name.toUpperCase()) == null) {
+			allPitsList.add(new ResourcePit(name.toUpperCase()));
+
+			config.createSection("pits." + name.toUpperCase());
+			PitAutofill.get().saveConfig();
+
+			output = "Successfully created the pit '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
+		}
+
+		return output;
 	}
 
 	// Remove the pit with the same name from our list.
 	public static String deletePit(String name) {
 
-		String output = noPitFoundMsg(name);
+		String output = noPitFoundMsg(name.toUpperCase());
 
-		ResourcePit thisPit = getPit(name);
+		ResourcePit thisPit = getPit(name.toUpperCase());
 		if (thisPit != null) {
 			allPitsList.remove(thisPit);
 
-			config.set("pits." + name, null);
+			config.set("pits." + name.toUpperCase(), null);
 			PitAutofill.get().saveConfig();
 
-			output = "Successfully deleted the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
+			output = "Successfully deleted the pit '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
 		}
 
 		return output;
 	}
 
 	// Sets the given pit's region name.
-	public static String setPitRegion(String name, String region, World world) {
+	public static String setPitRegion(String name, String region, String worldName) {
 
-		String output = noPitFoundMsg(name);
+		String output = noPitFoundMsg(name.toUpperCase());
 
-		ResourcePit thisPit = getPit(name);
+		ResourcePit thisPit = getPit(name.toUpperCase());
 		if (thisPit != null) {
 			// Saves to config inside setRegion.
-			output = thisPit.setRegion(region, world);
+			output = thisPit.setRegion(region, worldName);
 		}
 
 		return output;
@@ -97,9 +108,9 @@ public class PitList {
 	// Sets the given pit's block types.
 	public static String setPitBlocks(String name, String[] blockTypes) {
 
-		String output = noPitFoundMsg(name);
+		String output = noPitFoundMsg(name.toUpperCase());
 
-		ResourcePit thisPit = getPit(name);
+		ResourcePit thisPit = getPit(name.toUpperCase());
 		if (thisPit != null) {
 			// Saves to config inside setBlockTypes.
 			output = thisPit.setBlockTypes(blockTypes);
@@ -110,9 +121,9 @@ public class PitList {
 	// Refills the given pit.
 	public static String fillPit(String name) {
 
-		String output = noPitFoundMsg(name);
+		String output = noPitFoundMsg(name.toUpperCase());
 
-		ResourcePit thisPit = getPit(name);
+		ResourcePit thisPit = getPit(name.toUpperCase());
 		if (thisPit != null) {
 			output = thisPit.fill();
 		}
@@ -126,10 +137,10 @@ public class PitList {
 
 		for (ResourcePit pit : allPitsList) {
 			if (firstName) {
-				output += pit.getName();
+				output += pit.getName().toUpperCase();
 				firstName = false;
 			} else {
-				output += ", " + pit.getName();
+				output += ", " + pit.getName().toUpperCase();
 			}
 		}
 
@@ -140,7 +151,7 @@ public class PitList {
 	public static ResourcePit getPit(String name) {
 
 		for (ResourcePit thisPit : allPitsList) {
-			if (thisPit.getName().equalsIgnoreCase(name))
+			if (thisPit.getName().equalsIgnoreCase(name.toUpperCase()))
 				return thisPit;
 		}
 		return null;
@@ -151,7 +162,7 @@ public class PitList {
 
 	// Returns the pit not found error message.
 	private static String noPitFoundMsg(String name) {
-		return "No pit found with the name '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
+		return "No pit found with the name '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
 	}
 
 }

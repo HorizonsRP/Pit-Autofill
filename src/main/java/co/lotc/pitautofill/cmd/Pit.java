@@ -18,7 +18,6 @@ public class Pit extends BaseCommand {
 
 	/*
 	TODO LIST:
-	Save existing pits.
 	Tab Autocomplete.
 	Maybe add a cooldown?
 	 */
@@ -38,7 +37,7 @@ public class Pit extends BaseCommand {
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
 			player.sendMessage(PitAutofill.PREFIX + PitList.newPit(name));
-			player.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, player.getWorld()) );
+			player.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, player.getWorld().getName()) );
 		} else {
 			sender.sendMessage(PitAutofill.PREFIX + "If you're creating from console, please specify a world name after the region name.");
 		}
@@ -46,7 +45,7 @@ public class Pit extends BaseCommand {
 	@Cmd(value="Creates a new pit with given [name] {WorldGuard Region} {World Name}", permission="pit.create")
 	public void create(CommandSender sender, String name, String regionName, String worldName) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.newPit(name));
-		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, Bukkit.getWorld(worldName)) );
+		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, worldName));
 	}
 
 
@@ -54,14 +53,14 @@ public class Pit extends BaseCommand {
 	public void setregion(CommandSender sender, String name, String regionName) {
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
-			player.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, player.getWorld()) );
+			player.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, player.getWorld().getName()) );
 		} else {
 			sender.sendMessage(PitAutofill.PREFIX + "If you're setting the region from console, please specify a world name after the region name.");
 		}
 	}
 	@Cmd(value="Set the given pit's WorldGuard region.", permission="pit.edit")
 	public void setregion(CommandSender sender, String name, String regionName, String worldName) {
-		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, Bukkit.getWorld(worldName)) );
+		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, worldName));
 	}
 
 

@@ -52,20 +52,20 @@ public class ResourcePit {
 	}
 
 	// Sets the pit's region to a worldguard region with the given name, if found.
-	public String setRegion(String regionName, World givenWorld) {
+	public String setRegion(String regionName, String givenWorld) {
 		String output = "Could not find a region with that name in that world.";
 
 		RegionContainer container = com.sk89q.worldguard.WorldGuard.getInstance().getPlatform().getRegionContainer();
-		RegionManager worldRegions = container.get(BukkitAdapter.adapt(givenWorld));
+		RegionManager worldRegions = container.get(BukkitAdapter.adapt(Bukkit.getWorld(givenWorld)));
 
 		// If our region set exists and has the specified region we set the pit's region to that.
 		if (worldRegions != null && worldRegions.hasRegion(regionName)) {
-			PitAutofill.get().getConfig().set("pits." + name + ".regionName", region);
-			PitAutofill.get().getConfig().set("pits." + name + ".worldName", world.getName());
+			PitAutofill.get().getConfig().set("pits." + name + ".regionName", regionName);
+			PitAutofill.get().getConfig().set("pits." + name + ".worldName", givenWorld);
 			PitAutofill.get().saveConfig();
 
 			region = worldRegions.getRegion(regionName);
-			world = givenWorld;
+			world = Bukkit.getWorld(givenWorld);
 			output = "The pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "' has been assigned the region '" +
 					 PitAutofill.ALT_COLOUR + regionName + PitAutofill.PREFIX + "'.";
 		}
