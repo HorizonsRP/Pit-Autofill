@@ -237,7 +237,7 @@ public class ResourcePit {
 			// Run through our list of materials and setting the block based on chance.
 			Material finalMat = null;
 			for (Material mat : getBlockChanceList()) {
-				double blockChance = getBlockChance(mat)/100;
+				double blockChance = ((double) getBlockChance(mat)) / 100;
 
 				if (blockChance + currentTotal >= randomChance) {
 					finalMat = mat;

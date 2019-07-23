@@ -18,7 +18,7 @@ public class Pit extends BaseCommand {
 
 	/*
 	TODO LIST:
-	Save & Load existing pits.
+	Save existing pits.
 	Maybe add a cooldown?
 	 */
 
