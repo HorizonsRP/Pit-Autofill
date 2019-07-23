@@ -60,6 +60,10 @@ public class ResourcePit {
 
 		// If our region set exists and has the specified region we set the pit's region to that.
 		if (worldRegions != null && worldRegions.hasRegion(regionName)) {
+			PitAutofill.get().getConfig().set("pits." + name + ".regionName", region);
+			PitAutofill.get().getConfig().set("pits." + name + ".worldName", world.getName());
+			PitAutofill.get().saveConfig();
+
 			region = worldRegions.getRegion(regionName);
 			world = givenWorld;
 			output = "The pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "' has been assigned the region '" +
@@ -105,6 +109,11 @@ public class ResourcePit {
 
 		if (newBlockTypes.keySet().size() > 0) {
 			blockTypes = checkChances(newBlockTypes);
+
+			for (Material mat : blockTypes.keySet()) {
+				PitAutofill.get().getConfig().set("pits." + name + ".blockTypes." + mat.toString(), getBlockChance(mat));
+			}
+			PitAutofill.get().saveConfig();
 		} else {
 			output = "Please specify the blocks and their chances.";
 		}

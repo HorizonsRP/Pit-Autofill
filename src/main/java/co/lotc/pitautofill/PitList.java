@@ -11,42 +11,42 @@ import java.util.ArrayList;
 
 public class PitList {
 
-	private static ArrayList<ResourcePit> allPitsList = new ArrayList<ResourcePit>();
+	private static ArrayList<ResourcePit> allPitsList = new ArrayList<>();
+	private static FileConfiguration config;
 
 	//// STARTUP ////
 
 	// Iterate through our list of pits for each world, plugging in the required info if specified in the config.
 	public static void init() {
 
-		FileConfiguration config = PitAutofill.get().getConfig();
-		for (String world : config.getConfigurationSection("pits").getKeys(false)) {
-			for (String pitName : config.getConfigurationSection("pits." + world).getKeys(false)) {
+		config = PitAutofill.get().getConfig();
+		for (String pitName : config.getConfigurationSection("pits").getKeys(false)) {
 
-				String regionName = config.getString("pits." + world + "." + pitName + ".regionName");
-				ArrayList<String> blockTypes = new ArrayList<>();
+			String regionName = config.getString("pits." + pitName + ".regionName");
+			String worldName = config.getString("pits." + pitName + ".worldName");
+			ArrayList<String> blockTypes = new ArrayList<>();
 
-				for (String block : config.getConfigurationSection("pits." + world + "." + pitName + ".blockTypes").getKeys(false)) {
-					blockTypes.add(block + ":" + config.getInt("pits." + world + "." + pitName + ".blockTypes." + block));
-				}
-
-
-				PitAutofill.get().getServer().getLogger().info(newPit(pitName));
-
-				if (regionName != null) {
-					PitAutofill.get().getServer().getLogger().info(setPitRegion(pitName, regionName, Bukkit.getWorld(world)));
-				}
-
-				if (blockTypes.size() > 0) {
-					String[] stringedBlockTypes = new String[blockTypes.size()];
-					for (int i = 0; i < stringedBlockTypes.length; i++) {
-						stringedBlockTypes[i] = blockTypes.get(i);
-					}
-
-					PitAutofill.get().getServer().getLogger().info(setPitBlocks(pitName, stringedBlockTypes));
-				}
+			for (String block : config.getConfigurationSection("pits." + pitName + ".blockTypes").getKeys(false)) {
+				blockTypes.add(block + ":" + config.getInt("pits." + pitName + ".blockTypes." + block));
 			}
-		}
 
+
+			PitAutofill.get().getServer().getLogger().info("[Pit-Autofill] " + ChatColor.stripColor(newPit(pitName)));
+
+			if (regionName != null) {
+				setPitRegion(pitName, regionName, Bukkit.getWorld(worldName));
+			}
+
+			if (blockTypes.size() > 0) {
+				String[] stringedBlockTypes = new String[blockTypes.size()];
+				for (int i = 0; i < stringedBlockTypes.length; i++) {
+					stringedBlockTypes[i] = blockTypes.get(i);
+				}
+
+				setPitBlocks(pitName, stringedBlockTypes);
+			}
+
+		}
 	}
 
 
@@ -55,6 +55,10 @@ public class PitList {
 	// Create a new pit with the given name and add to our list.
 	public static String newPit(String name) {
 		allPitsList.add(new ResourcePit(name));
+
+		config.createSection("pits." + name);
+		PitAutofill.get().saveConfig();
+
 		return "Successfully created the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
 	}
 
@@ -66,8 +70,13 @@ public class PitList {
 		ResourcePit thisPit = getPit(name);
 		if (thisPit != null) {
 			allPitsList.remove(thisPit);
+
+			config.set("pits." + name, null);
+			PitAutofill.get().saveConfig();
+
 			output = "Successfully deleted the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
 		}
+
 		return output;
 	}
 
@@ -78,8 +87,10 @@ public class PitList {
 
 		ResourcePit thisPit = getPit(name);
 		if (thisPit != null) {
+			// Saves to config inside setRegion.
 			output = thisPit.setRegion(region, world);
 		}
+
 		return output;
 	}
 
@@ -90,6 +101,7 @@ public class PitList {
 
 		ResourcePit thisPit = getPit(name);
 		if (thisPit != null) {
+			// Saves to config inside setBlockTypes.
 			output = thisPit.setBlockTypes(blockTypes);
 		}
 		return output;

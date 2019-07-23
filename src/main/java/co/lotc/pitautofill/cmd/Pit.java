@@ -19,6 +19,7 @@ public class Pit extends BaseCommand {
 	/*
 	TODO LIST:
 	Save existing pits.
+	Tab Autocomplete.
 	Maybe add a cooldown?
 	 */
 
