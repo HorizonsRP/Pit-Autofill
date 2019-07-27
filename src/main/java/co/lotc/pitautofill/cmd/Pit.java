@@ -16,12 +16,6 @@ import co.lotc.pitautofill.BaseCommand;
 
 public class Pit extends BaseCommand {
 
-	/*
-	TODO LIST:
-	Tab Autocomplete.
-	Maybe add a cooldown?
-	 */
-
 	// PitAutofill Info
 	public void invoke(CommandSender sender) {
 		sender.sendMessage(PitAutofill.PREFIX + "Pit Autofill refills the resource pits on command. Use /help Pit-Autofill for more information.");
