@@ -10,18 +10,17 @@ commands:
     command: /<command>
     description: "Main command of the Pit-Autofill plugin."
 permissions:
-  pit:
-    create:
-      description: Allows the user to create new resource pits.
-      default: op
-      children:
-        pit.edit: true
-    edit:
-      description: Allows the user to edit current resource pits.
-      default: op
-    info:
-      description: Allows the user to inquire for info about the pits.
-      default: true
-    use:
-      description: Allows the user to fill the pits.
-      default: true
+  pit.create:
+    description: Allows the user to create new resource pits.
+    default: op
+    children:
+      pit.edit: true
+  pit.edit:
+    description: Allows the user to edit current resource pits.
+    default: op
+  pit.info:
+    description: Allows the user to inquire for info about the pits.
+    default: true
+  pit.use:
+    description: Allows the user to fill the pits.
+    default: true
