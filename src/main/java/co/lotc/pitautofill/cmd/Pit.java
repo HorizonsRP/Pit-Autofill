@@ -134,4 +134,5 @@ public class Pit extends BaseCommand {
 			sender.sendMessage(PitAutofill.PREFIX + "No pit found with the name '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.");
 		}
 	}
+
 }

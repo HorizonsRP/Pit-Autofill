@@ -52,8 +52,8 @@ public class PitList {
 
 				setPitBlocks(pitName, stringedBlockTypes);
 			}
-
 		}
+
 	}
 
 
