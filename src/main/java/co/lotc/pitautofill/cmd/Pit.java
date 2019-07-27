@@ -130,6 +130,12 @@ public class Pit extends BaseCommand {
 							  PitAutofill.PREFIX + "\nHas Region: " + PitAutofill.ALT_COLOUR + WordUtils.capitalize(thisPit.regionIsNotNull() + "") +
 							  PitAutofill.PREFIX + "\nMin for Refill: " + PitAutofill.ALT_COLOUR + thisPit.getRefillValue() + "%");
 
+			if (thisPit.getCooldown() <= 0) {
+				message +=  PitAutofill.PREFIX + "\nCooldown: " + PitAutofill.ALT_COLOUR + "None";
+			} else {
+				message +=  PitAutofill.PREFIX + "\nCooldown: " + PitAutofill.ALT_COLOUR + thisPit.getCooldown() + " seconds";
+			}
+
 			if (thisPit.regionIsNotNull()) {
 				message += (PitAutofill.PREFIX + "\nRegion Name: " + PitAutofill.ALT_COLOUR + thisPit.getRegion().getId() +
 							PitAutofill.PREFIX + "\nWorld: " + PitAutofill.ALT_COLOUR + thisPit.getRegionWorld().getName());

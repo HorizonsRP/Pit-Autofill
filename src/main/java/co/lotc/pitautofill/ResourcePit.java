@@ -36,7 +36,8 @@ public class ResourcePit {
 	public String getRegionName() { return region.getId(); }
 	public World getRegionWorld() {	return world; }
 	public String getName() { return name; }
-	public int getRefillValue() { return PitAutofill.get().getConfig().getInt("pits." + name + ".refillValue"); }
+	public int getRefillValue() { return PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".refillValue"); }
+	public int getCooldown() { return PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".cooldown"); }
 
 
 	//// CONSTRUCTORS ////
