@@ -24,7 +24,6 @@ public class ResourcePit {
 	private World world;                               // Stores the world the region resides in.
 	private HashMap<Material, Integer> blockTypes;     // Stored as block Material, chance Integer
 	private ProtectedRegion region;                    // Stores the WorldGuard region.
-	private int refillValue;                           // This pit's specific max % full when filling.
 
 	// One Liner Gets
 	public boolean regionIsNotNull() { return region != null; }
@@ -32,17 +31,21 @@ public class ResourcePit {
 	public String getRegionName() { return region.getId(); }
 	public World getRegionWorld() {	return world; }
 	public String getName() { return name; }
+	public int getRefillValue() { return PitAutofill.get().getConfig().getInt("pits." + name + ".refillValue"); }
 
 
 	//// CONSTRUCTORS ////
 
 	// Constructor called on with given name. Initializes all other values.
 	public ResourcePit(String givenName) {
-		setName(givenName);
+		name = givenName;
 		world = null;
 		blockTypes = new HashMap<>();
 		region = null;
-		refillValue = PitAutofill.get().getConfig().getInt("default-refill-value");
+
+		if (!PitAutofill.get().getConfig().isSet("pits." + name.toUpperCase() + ".refillValue"))
+			PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".refillValue", PitAutofill.get().getConfig().getInt("default-refill-value"));
+		PitAutofill.get().saveConfig();
 	}
 
 
@@ -67,15 +70,18 @@ public class ResourcePit {
 	// Sets the region's name to the new name.
 	public String setName(String givenName) {
 
-		PitAutofill.get().getConfig().createSection("pits." + givenName);
-		copyConfigSection(PitAutofill.get().getConfig(), "pits." + name, "pits." + givenName);
-		PitAutofill.get().getConfig().set("pits." + name, null);
-		PitAutofill.get().saveConfig();
-
 		String output = "Successfully changed the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "' to '" + PitAutofill.ALT_COLOUR + givenName + PitAutofill.PREFIX + "'.";
 
-		name = givenName;
+		if(!PitAutofill.get().getConfig().isSet("pits." + givenName)) {
+			PitAutofill.get().getConfig().createSection("pits." + givenName);
+			copyConfigSection(PitAutofill.get().getConfig(), "pits." + name, "pits." + givenName);
+			PitAutofill.get().getConfig().set("pits." + name, null);
+			PitAutofill.get().saveConfig();
 
+			name = givenName;
+		} else {
+			output = "A pit with that name already exists Please delete it before copying over it.";
+		}
 		return output;
 	}
 
@@ -84,18 +90,24 @@ public class ResourcePit {
 		String output = "Could not find a region with that name in that world.";
 
 		RegionContainer container = com.sk89q.worldguard.WorldGuard.getInstance().getPlatform().getRegionContainer();
-		RegionManager worldRegions = container.get(BukkitAdapter.adapt(Bukkit.getWorld(givenWorld)));
+		World thisWorld = Bukkit.getWorld(givenWorld);
 
-		// If our region set exists and has the specified region we set the pit's region to that.
-		if (worldRegions != null && worldRegions.hasRegion(regionName)) {
-			PitAutofill.get().getConfig().set("pits." + name + ".regionName", regionName);
-			PitAutofill.get().getConfig().set("pits." + name + ".worldName", givenWorld);
-			PitAutofill.get().saveConfig();
+		if (thisWorld != null) {
+			RegionManager worldRegions = container.get(BukkitAdapter.adapt(thisWorld));
 
-			region = worldRegions.getRegion(regionName);
-			world = Bukkit.getWorld(givenWorld);
-			output = "The pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "' has been assigned the region '" +
-					 PitAutofill.ALT_COLOUR + regionName + PitAutofill.PREFIX + "'.";
+			// If our region set exists and has the specified region we set the pit's region to that.
+			if (worldRegions != null && worldRegions.hasRegion(regionName)) {
+				PitAutofill.get().getConfig().set("pits." + name + ".regionName", regionName);
+				PitAutofill.get().getConfig().set("pits." + name + ".worldName", givenWorld);
+				PitAutofill.get().saveConfig();
+
+				region = worldRegions.getRegion(regionName);
+				world = Bukkit.getWorld(givenWorld);
+				output = "The pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "' has been assigned the region '" +
+						 PitAutofill.ALT_COLOUR + regionName + PitAutofill.PREFIX + "'.";
+			}
+		} else {
+			output = "There is no world with that name.";
 		}
 
 		return output;
@@ -156,7 +168,8 @@ public class ResourcePit {
 		String output = "Please enter a number between 0 and 100.";
 
 		if (newValue >= 0 && newValue <= 100) {
-			refillValue = newValue;
+			PitAutofill.get().getConfig().set("pits." + name + ".refillValue", newValue);
+			PitAutofill.get().saveConfig();
 			output = "Updated the minimum refill value for the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
 		}
 		return output;
@@ -235,7 +248,7 @@ public class ResourcePit {
 					}
 				}
 
-				if ((1f - (airCount / totalCount)) <= ((float) refillValue) / 100) {
+				if ((1f - (airCount / totalCount)) <= ((float) PitAutofill.get().getConfig().getInt("pits." + name + ".refillValue")) / 100) {
 					if (Bukkit.getPluginManager().isPluginEnabled("LWC"))
 						removeLocks();
 					output = changeBlocks();

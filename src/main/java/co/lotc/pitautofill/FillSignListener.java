@@ -22,7 +22,7 @@ public class FillSignListener implements Listener {
 
 			Sign sign = (Sign) block.getState();
 			if (sign.getLine(1).equalsIgnoreCase("[Refill]")) {
-				event.getPlayer().sendMessage(PitAutofill.PREFIX + PitList.fillPit(sign.getLine(2)));
+				event.getPlayer().sendMessage(PitAutofill.PREFIX + PitList.fillPit(sign.getLine(2).replace(' ', '_')));
 			}
 		}
 	}

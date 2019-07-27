@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -30,10 +31,12 @@ public class PitList {
 			String worldName = config.getString("pits." + pitName + ".worldName");
 			ArrayList<String> blockTypes = new ArrayList<>();
 
-			for (String block : config.getConfigurationSection("pits." + pitName + ".blockTypes").getKeys(false)) {
-				blockTypes.add(block + ":" + config.getInt("pits." + pitName + ".blockTypes." + block));
+			ConfigurationSection configSection = config.getConfigurationSection("pits." + pitName + ".blockTypes");
+			if (configSection != null) {
+				for (String block : configSection.getKeys(false)) {
+					blockTypes.add(block + ":" + config.getInt("pits." + pitName + ".blockTypes." + block));
+				}
 			}
-
 
 			PitAutofill.get().getServer().getLogger().info("[Pit-Autofill] " + ChatColor.stripColor(newPit(pitName)));
 
@@ -62,10 +65,12 @@ public class PitList {
 		String output = "A pit with that name already exists.";
 
 		if (getPit(name.toUpperCase()) == null) {
-			allPitsList.add(new ResourcePit(name.toUpperCase()));
+			if (!config.isSet("pits." + name.toUpperCase())) {
+				config.createSection("pits." + name.toUpperCase());
+				PitAutofill.get().saveConfig();
+			}
 
-			config.createSection("pits." + name.toUpperCase());
-			PitAutofill.get().saveConfig();
+			allPitsList.add(new ResourcePit(name.toUpperCase()));
 
 			output = "Successfully created the pit '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
 		}

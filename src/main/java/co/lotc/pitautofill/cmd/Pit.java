@@ -68,7 +68,7 @@ public class Pit extends BaseCommand {
 
 
 	@Cmd(value="Change the given pit's name.", permission="pit.edit")
-	public void rename(CommandSender sender, String name, String newName) {
+	public void setname(CommandSender sender, String name, String newName) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitName(name, newName));
 	}
 
@@ -130,7 +130,8 @@ public class Pit extends BaseCommand {
 
 			String message = (PitAutofill.ALT_COLOUR + ChatColor.BOLD + "Pit '" + name.toUpperCase() + "'" +
 							  PitAutofill.PREFIX + "\nBlock Types: " + PitAutofill.ALT_COLOUR + typeList +
-							  PitAutofill.PREFIX + "\nHas Region: " + PitAutofill.ALT_COLOUR + WordUtils.capitalize(thisPit.regionIsNotNull() + ""));
+							  PitAutofill.PREFIX + "\nHas Region: " + PitAutofill.ALT_COLOUR + WordUtils.capitalize(thisPit.regionIsNotNull() + "") +
+							  PitAutofill.PREFIX + "\nMin for Refill: " + PitAutofill.ALT_COLOUR + thisPit.getRefillValue() + "%");
 
 			if (thisPit.regionIsNotNull()) {
 				message += (PitAutofill.PREFIX + "\nRegion Name: " + PitAutofill.ALT_COLOUR + thisPit.getRegion().getId() +
