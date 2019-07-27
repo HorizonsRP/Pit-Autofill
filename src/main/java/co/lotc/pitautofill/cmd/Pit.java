@@ -66,10 +66,12 @@ public class Pit extends BaseCommand {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, worldName));
 	}
 
+
 	@Cmd(value="Change the given pit's name.", permission="pit.edit")
 	public void rename(CommandSender sender, String name, String newName) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitName(name, newName));
 	}
+
 
 	@Cmd(value="Premanently deletes a given pit.", permission="pit.edit")
 	public void delete(CommandSender sender, String name) {
@@ -80,6 +82,18 @@ public class Pit extends BaseCommand {
 	@Cmd(value="Set the given pit's block types by Block:##.", permission="pit.edit")
 	public void setblocks(CommandSender sender, String name, String[] blocks) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitBlocks(name, blocks));
+	}
+
+
+	@Cmd(value="Sets the default block chance if unspecified.", permission="pit.create")
+	public void setdefaultchance(CommandSender sender, int chance) {
+		sender.sendMessage(PitAutofill.PREFIX + ResourcePit.setDefaultChanceValue(chance));
+	}
+
+
+	@Cmd(value="Set the max percentage a pit can be filled when refilling.", permission="pit.edit")
+	public void setrefillvalue(CommandSender sender, String name, int value) {
+		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRefillValue(name, value));
 	}
 
 

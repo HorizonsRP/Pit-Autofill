@@ -7,4 +7,6 @@
 #    blockTypes:
 #      block1: chance
 #      block2: chance
+default-refill-value: 30
+default-chance-value: 100
 pits:

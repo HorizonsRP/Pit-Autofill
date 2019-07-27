@@ -115,7 +115,7 @@ public class PitList {
 		return output;
 	}
 
-	//Changes the given pit's name.
+	// Changes the given pit's name.
 	public static String setPitName(String name, String newName) {
 		String output = noPitFoundMsg(name.toUpperCase());
 
@@ -123,6 +123,17 @@ public class PitList {
 		if (thisPit != null) {
 			// Saves to config inside setName.
 			output = thisPit.setName(newName.toUpperCase());
+		}
+		return output;
+	}
+
+	// Changes the given pit's refill value.
+	public static String setPitRefillValue(String name, int value) {
+		String output = noPitFoundMsg(name.toUpperCase());
+
+		ResourcePit thisPit = getPit(name.toUpperCase());
+		if (thisPit != null) {
+			output = thisPit.setRefillValue(value);
 		}
 		return output;
 	}

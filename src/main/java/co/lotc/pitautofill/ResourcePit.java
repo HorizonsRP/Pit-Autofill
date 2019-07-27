@@ -20,13 +20,11 @@ import com.sk89q.worldguard.protection.regions.RegionContainer;
 
 public class ResourcePit {
 
-	private static final float MAX_EMPTY_REFILL_VALUE = 0.3f; // The max % a pit can have when being filled.
-	private static final int DEFAULT_CHANCE_VALUE = 100;      // The default chance for a block if unspecified.
-
 	private String name;                               // The name/ID of the pit.
 	private World world;                               // Stores the world the region resides in.
 	private HashMap<Material, Integer> blockTypes;     // Stored as block Material, chance Integer
 	private ProtectedRegion region;                    // Stores the WorldGuard region.
+	private int refillValue;                           // This pit's specific max % full when filling.
 
 	// One Liner Gets
 	public boolean regionIsNotNull() { return region != null; }
@@ -41,8 +39,26 @@ public class ResourcePit {
 	// Constructor called on with given name. Initializes all other values.
 	public ResourcePit(String givenName) {
 		setName(givenName);
-		region = null;
+		world = null;
 		blockTypes = new HashMap<>();
+		region = null;
+		refillValue = PitAutofill.get().getConfig().getInt("default-refill-value");
+	}
+
+
+	//// STATIC ////
+
+	// Sets the chanceValue.
+	public static String setDefaultChanceValue(int newValue) {
+
+		String output = "Please enter a number between 0 and 100.";
+
+		if (newValue >= 0 && newValue <= 100) {
+			PitAutofill.get().getConfig().set("default-chance-value", newValue);
+			PitAutofill.get().saveConfig();
+			output = "Updated the default chance value for all pits.";
+		}
+		return output;
 	}
 
 
@@ -108,7 +124,7 @@ public class ResourcePit {
 				try {
 					chance = Integer.parseInt(arg.substring(chanceIndex+1));
 				} catch (NumberFormatException nfe) {
-					chance = DEFAULT_CHANCE_VALUE;
+					chance = PitAutofill.get().getConfig().getInt("default-chance-value");
 				}
 			} else {
 				type = arg;
@@ -122,6 +138,7 @@ public class ResourcePit {
 		if (newBlockTypes.keySet().size() > 0) {
 			blockTypes = checkChances(newBlockTypes);
 
+			PitAutofill.get().getConfig().set("pits." + name + ".blockTypes", null);
 			for (Material mat : blockTypes.keySet()) {
 				PitAutofill.get().getConfig().set("pits." + name + ".blockTypes." + mat.toString(), getBlockChance(mat));
 			}
@@ -130,6 +147,18 @@ public class ResourcePit {
 			output = "Please specify the blocks and their chances.";
 		}
 
+		return output;
+	}
+
+	// Sets the refillValue.
+	public String setRefillValue(int newValue) {
+
+		String output = "Please enter a number between 0 and 100.";
+
+		if (newValue >= 0 && newValue <= 100) {
+			refillValue = newValue;
+			output = "Updated the minimum refill value for the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
+		}
 		return output;
 	}
 
@@ -206,7 +235,7 @@ public class ResourcePit {
 					}
 				}
 
-				if ((1f - (airCount / totalCount)) < MAX_EMPTY_REFILL_VALUE) {
+				if ((1f - (airCount / totalCount)) <= ((float) refillValue) / 100) {
 					if (Bukkit.getPluginManager().isPluginEnabled("LWC"))
 						removeLocks();
 					output = changeBlocks();
