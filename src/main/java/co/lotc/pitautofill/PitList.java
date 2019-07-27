@@ -69,7 +69,6 @@ public class PitList {
 
 			output = "Successfully created the pit '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
 		}
-
 		return output;
 	}
 
@@ -87,7 +86,6 @@ public class PitList {
 
 			output = "Successfully deleted the pit '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
 		}
-
 		return output;
 	}
 
@@ -101,7 +99,6 @@ public class PitList {
 			// Saves to config inside setRegion.
 			output = thisPit.setRegion(region, worldName);
 		}
-
 		return output;
 	}
 
@@ -114,6 +111,18 @@ public class PitList {
 		if (thisPit != null) {
 			// Saves to config inside setBlockTypes.
 			output = thisPit.setBlockTypes(blockTypes);
+		}
+		return output;
+	}
+
+	//Changes the given pit's name.
+	public static String setPitName(String name, String newName) {
+		String output = noPitFoundMsg(name.toUpperCase());
+
+		ResourcePit thisPit = getPit(name.toUpperCase());
+		if (thisPit != null) {
+			// Saves to config inside setName.
+			output = thisPit.setName(newName.toUpperCase());
 		}
 		return output;
 	}

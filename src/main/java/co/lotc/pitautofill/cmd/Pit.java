@@ -19,6 +19,9 @@ public class Pit extends BaseCommand {
 	/*
 	TODO LIST:
 	Tab Autocomplete.
+	LWC Removal.
+	Set default chance.
+	Set % empty required.
 	Maybe add a cooldown?
 	 */
 
@@ -63,6 +66,10 @@ public class Pit extends BaseCommand {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, worldName));
 	}
 
+	@Cmd(value="Change the given pit's name.", permission="pit.edit")
+	public void rename(CommandSender sender, String name, String newName) {
+		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitName(name, newName));
+	}
 
 	@Cmd(value="Premanently deletes a given pit.", permission="pit.edit")
 	public void delete(CommandSender sender, String name) {

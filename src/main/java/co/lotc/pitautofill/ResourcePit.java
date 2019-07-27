@@ -8,6 +8,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -47,8 +49,18 @@ public class ResourcePit {
 	//// MODIFIERS ////
 
 	// Sets the region's name to the new name.
-	public void setName(String givenName) {
+	public String setName(String givenName) {
+
+		PitAutofill.get().getConfig().createSection("pits." + givenName);
+		copyConfigSection(PitAutofill.get().getConfig(), "pits." + name, "pits." + givenName);
+		PitAutofill.get().getConfig().set("pits." + name, null);
+		PitAutofill.get().saveConfig();
+
+		String output = "Successfully changed the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "' to '" + PitAutofill.ALT_COLOUR + givenName + PitAutofill.PREFIX + "'.";
+
 		name = givenName;
+
+		return output;
 	}
 
 	// Sets the pit's region to a worldguard region with the given name, if found.
@@ -160,6 +172,19 @@ public class ResourcePit {
 
 
 	//// OPERATORS ////
+
+	// Recursively copies all data at the given configurationSection under the new name.
+	private void copyConfigSection(FileConfiguration config, String oldPath, String newPath) {
+
+		ConfigurationSection cs = config.getConfigurationSection(oldPath);
+		if (cs != null) {
+			for (String key : cs.getKeys(false)) {
+				copyConfigSection(config, oldPath + "." + key, newPath + "." + key);
+			}
+		} else {
+			config.set(newPath, config.get(oldPath));
+		}
+	}
 
 	/*
 	So long as there're no players in the pit, fill it. If there are
