@@ -2,6 +2,7 @@ package co.lotc.pitautofill;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 
 import com.griefcraft.lwc.LWCPlugin;
@@ -27,6 +28,7 @@ public class ResourcePit {
 	private World world;                               // Stores the world the region resides in.
 	private HashMap<Material, Integer> blockTypes;     // Stored as block Material, chance Integer
 	private ProtectedRegion region;                    // Stores the WorldGuard region.
+	private Date lastFilled;                           // Stores the last date/time that this pit was filled.
 
 	// One Liner Gets
 	public boolean regionIsNotNull() { return region != null; }
@@ -45,9 +47,15 @@ public class ResourcePit {
 		world = null;
 		blockTypes = new HashMap<>();
 		region = null;
+		lastFilled = new Date();
+		lastFilled.setTime(0);
 
 		if (!PitAutofill.get().getConfig().isSet("pits." + name.toUpperCase() + ".refillValue"))
 			PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".refillValue", PitAutofill.get().getConfig().getInt("default-refill-value"));
+
+		if (!PitAutofill.get().getConfig().isSet("pits." + name.toUpperCase() + ".cooldown"))
+			PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".cooldown", PitAutofill.get().getConfig().getInt("default-cooldown-value"));
+
 		PitAutofill.get().saveConfig();
 	}
 
@@ -112,7 +120,6 @@ public class ResourcePit {
 		} else {
 			output = "There is no world with that name.";
 		}
-
 		return output;
 	}
 
@@ -161,7 +168,6 @@ public class ResourcePit {
 		} else {
 			output = "Please specify the blocks and their chances.";
 		}
-
 		return output;
 	}
 
@@ -171,9 +177,22 @@ public class ResourcePit {
 		String output = "Please enter a number between 0 and 100.";
 
 		if (newValue >= 0 && newValue <= 100) {
-			PitAutofill.get().getConfig().set("pits." + name + ".refillValue", newValue);
+			PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".refillValue", newValue);
 			PitAutofill.get().saveConfig();
 			output = "Updated the minimum refill value for the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
+		}
+		return output;
+	}
+
+	// Sets the pit's cooldown in seconds.
+	public String setCooldown(int cooldownValue) {
+
+		String output = "Please enter a positive integer.";
+
+		if (cooldownValue >= 0) {
+			PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".cooldown", cooldownValue);
+			PitAutofill.get().saveConfig();
+			output = "Updated the usage cooldown for the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
 		}
 		return output;
 	}
@@ -243,18 +262,29 @@ public class ResourcePit {
 
 				float airCount = 0;
 				float totalCount = 0;
-				if (regionIsNotNull()) {
-					for (Location loc : getLocationList()) {
-						if (world.getBlockAt(loc).getType().equals(Material.AIR))
-							airCount += 1f;
-						totalCount += 1f;
-					}
+				for (Location loc : getLocationList()) {
+					if (world.getBlockAt(loc).getType().equals(Material.AIR))
+						airCount += 1f;
+					totalCount += 1f;
 				}
 
 				if ((1f - (airCount / totalCount)) <= ((float) PitAutofill.get().getConfig().getInt("pits." + name + ".refillValue")) / 100) {
 					if (Bukkit.getPluginManager().isPluginEnabled("LWC"))
 						removeLocks();
-					output = changeBlocks();
+
+					long fillCooldown = PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
+
+					if (fillCooldown > 0) {
+						long timeSinceRefill = (int) ((new Date().getTime() - lastFilled.getTime()) / 1000);
+
+						if (timeSinceRefill > fillCooldown) {
+							output = changeBlocks();
+						} else {
+							output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOUR + (fillCooldown - timeSinceRefill + 1) + " seconds" + PitAutofill.PREFIX + ".";
+						}
+					} else {
+						output = changeBlocks();
+					}
 				} else {
 					output = "The pit is still too full. Please use what's currently there.";
 				}
@@ -308,6 +338,8 @@ public class ResourcePit {
 	private String changeBlocks() {
 		String output = "The pit has been refilled.";
 
+		boolean fillSuccessful = false;
+
 		for (Location loc : getLocationList()) {
 
 			double randomChance = Math.random();
@@ -329,11 +361,15 @@ public class ResourcePit {
 
 			if (finalMat != null) {
 				loc.getBlock().setType(finalMat);
+				fillSuccessful = true;
 			} else {
 				output = "No blocks specified for that pit.";
 				break;
 			}
 		}
+
+		if (fillSuccessful)
+			lastFilled = new Date();
 
 		return output;
 	}

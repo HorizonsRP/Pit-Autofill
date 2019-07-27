@@ -43,6 +43,12 @@ public class Pit extends BaseCommand {
 	}
 
 
+	@Cmd(value="Sets the default block chance if unspecified.", permission="pit.create")
+	public void setdefaultchance(CommandSender sender, int chance) {
+		sender.sendMessage(PitAutofill.PREFIX + ResourcePit.setDefaultChanceValue(chance));
+	}
+
+
 	@Cmd(value="Set the given pit's WorldGuard region.", permission="pit.edit")
 	public void setregion(CommandSender sender, String name, String regionName) {
 		if (sender instanceof Player) {
@@ -76,19 +82,19 @@ public class Pit extends BaseCommand {
 	}
 
 
-	@Cmd(value="Sets the default block chance if unspecified.", permission="pit.create")
-	public void setdefaultchance(CommandSender sender, int chance) {
-		sender.sendMessage(PitAutofill.PREFIX + ResourcePit.setDefaultChanceValue(chance));
-	}
-
-
 	@Cmd(value="Set the max percentage a pit can be filled when refilling.", permission="pit.edit")
 	public void setrefillvalue(CommandSender sender, String name, int value) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRefillValue(name, value));
 	}
 
 
-	@Cmd(value="Refills the given pit.", permission="pit.edit")
+	@Cmd(value="Sets the given pit's cooldown in seconds.", permission="pit.edit")
+	public void setcooldown(CommandSender sender, String name, int value) {
+		sender.sendMessage(PitAutofill.PREFIX + PitList.setCooldown(name, value));
+	}
+
+
+	@Cmd(value="Refills the given pit.", permission="pit.use")
 	public void fill(CommandSender sender, String name) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.fillPit(name));
 	}

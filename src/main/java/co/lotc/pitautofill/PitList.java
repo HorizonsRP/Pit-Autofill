@@ -143,6 +143,17 @@ public class PitList {
 		return output;
 	}
 
+	// Sets the pit's cooldown.
+	public static String setCooldown(String name, int value) {
+		String output = noPitFoundMsg(name.toUpperCase());
+
+		ResourcePit thisPit = getPit(name.toUpperCase());
+		if (thisPit != null) {
+			output = thisPit.setCooldown(value);
+		}
+		return output;
+	}
+
 	// Refills the given pit.
 	public static String fillPit(String name) {
 

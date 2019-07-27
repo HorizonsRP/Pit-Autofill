@@ -9,4 +9,5 @@
 #      block2: chance
 default-refill-value: 30
 default-chance-value: 100
+default-cooldown-value: 0
 pits:
