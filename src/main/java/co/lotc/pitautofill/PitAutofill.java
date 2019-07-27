@@ -39,11 +39,4 @@ public class PitAutofill extends JavaPlugin {
     @Override
     public void onDisable() { }
 
-    /*
-     * Loads all existing pits from the config.
-     */
-    private void loadPits() {
-        //TODO: Format and load pit info from configs.
-    }
-
 }// class
