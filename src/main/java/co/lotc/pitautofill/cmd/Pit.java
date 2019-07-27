@@ -19,9 +19,6 @@ public class Pit extends BaseCommand {
 	/*
 	TODO LIST:
 	Tab Autocomplete.
-	LWC Removal.
-	Set default chance.
-	Set % empty required.
 	Maybe add a cooldown?
 	 */
 

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
+import com.griefcraft.lwc.LWCPlugin;
+import com.griefcraft.model.Protection;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,6 +19,7 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
+import org.bukkit.plugin.Plugin;
 
 public class ResourcePit {
 
@@ -287,13 +290,13 @@ public class ResourcePit {
 	// Removes all block locks within the region.
 	private void removeLocks() {
 		// For each location in the region, if there's a lock, remove it.
-		/*for (Location loc : getBlockLocationList()) {
-			LWCPlugin lwcPlugin = Bukkit.getPluginManager().getPlugin("LWC");
-			Protection prot = null;
+		LWCPlugin lwcPlugin = (LWCPlugin) PitAutofill.get().getServer().getPluginManager().getPlugin("LWC");
+		for (Location loc : getLocationList()) {
+			Protection prot = lwcPlugin.getLWC().findProtection(loc);
 			if (prot != null) {
 				prot.remove();
 			}
-		}*/
+		}
 	}
 
 	/*
