@@ -26,10 +26,12 @@ public class FillSignListener implements Listener {
 
 			Sign sign = (Sign) block.getState();
 			if (sign.getLine(1).equalsIgnoreCase(SIGN_IDENTIFIER)) {
-				if (event.getPlayer().hasPermission("pit.use"))
+				if (event.getPlayer().hasPermission("pit.use")) {
 					event.getPlayer().sendMessage(PitAutofill.PREFIX + PitList.fillPit(sign.getLine(2).replace(' ', '_')));
-				else
+					PitAutofill.get().getLogger().info("Pit filled via sign by " + event.getPlayer().getName() + " at " + event.getClickedBlock().getLocation().toString() + ".");
+				} else {
 					event.getPlayer().sendMessage(PitAutofill.PREFIX + "You cannot refill the pits.");
+				}
 			}
 		}
 	}
@@ -41,6 +43,7 @@ public class FillSignListener implements Listener {
 			if (event.getPlayer().hasPermission("pit.edit")) {
 				event.setLine(1, SIGN_IDENTIFIER);
 				event.setLine(2, WordUtils.capitalizeFully(event.getLine(2).replace('_', ' ')));
+				PitAutofill.get().getLogger().info("Refill sign placed by " + event.getPlayer().getName() + " at " + event.getBlock().getLocation().toString() + ".");
 			} else {
 				event.setCancelled(true);
 				event.getPlayer().sendMessage(PitAutofill.PREFIX + "You cannot create a refill sign.");
