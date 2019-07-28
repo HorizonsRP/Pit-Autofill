@@ -9,6 +9,7 @@ import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -18,13 +19,13 @@ import co.lotc.pitautofill.BaseCommand;
 public class Pit extends BaseCommand {
 
 	@Cmd(value="Creates a new pit with given [name]", permission="pit.create")
-	public void create(CommandSender sender, @Arg(value = "pit_name", description = "The name of the pit you wish to create.")String name) {
+	public void create(CommandSender sender, @Arg(value = "pit_name", description = "The name of the pit you wish to create.") String name) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.newPit(name));
 	}
 	@Cmd(value="Creates a new pit with given [name] {WorldGuard Region}", permission="pit.create")
 	public void create(CommandSender sender,
-					   @Arg(value = "pit_name", description = "The name of the pit in question.")String name,
-					   @Arg(value = "region_name", description = "The name of the region you wish to assign.")String regionName) {
+					   @Arg(value = "pit_name", description = "The name of the pit in question.") String name,
+					   @Arg(value = "region_name", description = "The name of the region you wish to assign.") String regionName) {
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
 			player.sendMessage(PitAutofill.PREFIX + PitList.newPit(name));
@@ -35,11 +36,11 @@ public class Pit extends BaseCommand {
 	}
 	@Cmd(value="Creates a new pit with given [name] {WorldGuard Region} {World Name}", permission="pit.create")
 	public void create(CommandSender sender,
-					   @Arg(value = "pit_name", description = "The name of the pit in question.")String name,
-					   @Arg(value = "region_name", description = "The name of the region you wish to assign.")String regionName,
-					   @Arg(value = "world_name", description = "The name of the world the region resides in.")String worldName) {
+					   @Arg(value = "pit_name", description = "The name of the pit in question.") String name,
+					   @Arg(value = "region_name", description = "The name of the region you wish to assign.") String regionName,
+					   @Arg(value = "world_name", description = "The name of the world the region resides in.") String world) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.newPit(name));
-		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, worldName));
+		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, world));
 	}
 
 
@@ -51,8 +52,8 @@ public class Pit extends BaseCommand {
 
 	@Cmd(value="Set the given pit's WorldGuard region.", permission="pit.edit")
 	public void setregion(CommandSender sender,
-						  @Arg(value = "pit_name", description = "The name of the pit in question.")String name,
-						  @Arg(value = "region_name", description = "The name of the region you wish to assign.")String regionName) {
+						  @Arg(value = "pit_name", description = "The name of the pit in question.") String name,
+						  @Arg(value = "region_name", description = "The name of the region you wish to assign.") String regionName) {
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
 			player.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, player.getWorld().getName()) );
@@ -62,53 +63,53 @@ public class Pit extends BaseCommand {
 	}
 	@Cmd(value="Set the given pit's WorldGuard region.", permission="pit.edit")
 	public void setregion(CommandSender sender,
-						  @Arg(value = "pit_name", description = "The name of the pit in question.")String name,
-						  @Arg(value = "region_name", description = "The name of the region you wish to assign.")String regionName,
-						  @Arg(value = "world_name", description = "The name of the world the region resides in.")String worldName) {
-		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, worldName));
+						  @Arg(value = "pit_name", description = "The name of the pit in question.") String name,
+						  @Arg(value = "region_name", description = "The name of the region you wish to assign.") String regionName,
+						  @Arg(value = "world_name", description = "The name of the world the region resides in.") String world) {
+		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRegion(name, regionName, world));
 	}
 
 
 	@Cmd(value="Change the given pit's name.", permission="pit.edit")
 	public void setname(CommandSender sender,
-						@Arg(value = "old_name", description = "The name of the pit in question.")String name,
-						@Arg(value = "new_name", description = "The new name you wish to assign the pit.")String newName) {
+						@Arg(value = "old_name", description = "The name of the pit in question.") String name,
+						@Arg(value = "new_name", description = "The new name you wish to assign the pit.") String newName) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitName(name, newName));
 	}
 
 
 	@Cmd(value="Premanently deletes a given pit.", permission="pit.edit")
-	public void delete(CommandSender sender, @Arg(value = "pit_name", description = "The name of the pit in question.")String name) {
+	public void delete(CommandSender sender, @Arg(value = "pit_name", description = "The name of the pit in question.") String name) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.deletePit(name));
 	}
 
 
 	@Cmd(value="Set the given pit's block types by Block:##.", permission="pit.edit")
 	public void setblocks(CommandSender sender,
-						  @Arg(value = "pit_name", description = "The name of the pit in question.")String name,
-						  @Arg(value = "block:##", description = "Any number of blocks and their chances to spawn, seperated by a ':'.")String[] blocks) {
+						  @Arg(value = "pit_name", description = "The name of the pit in question.") String name,
+						  @Arg(value = "block:##", description = "Any number of blocks and their chances to spawn, seperated by a ':'.") String[] blocks) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitBlocks(name, blocks));
 	}
 
 
 	@Cmd(value="Set the max percentage a pit can be filled when refilling.", permission="pit.edit")
 	public void setrefillvalue(CommandSender sender,
-							   @Arg(value = "pit_name", description = "The name of the pit in question.")String name,
-							   @Arg(value = "refill value", description = "An number between 0 and 100 that represents the max saturation a pit can have when refilling.")int value) {
+							   @Arg(value = "pit_name", description = "The name of the pit in question.") String name,
+							   @Arg(value = "refill value", description = "An number between 0 and 100 that represents the max saturation a pit can have when refilling.") int value) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setPitRefillValue(name, value));
 	}
 
 
 	@Cmd(value="Sets the given pit's cooldown in seconds.", permission="pit.edit")
 	public void setcooldown(CommandSender sender,
-							@Arg(value = "pit_name", description = "The name of the pit in question.")String name,
-							@Arg(value = "cooldown", description = "The number of seconds that must pass before one can refill a pit again.")int value) {
+							@Arg(value = "pit_name", description = "The name of the pit in question.") String name,
+							@Arg(value = "cooldown", description = "The number of seconds that must pass before one can refill a pit again.") int value) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.setCooldown(name, value));
 	}
 
 
 	@Cmd(value="Refills the given pit.", permission="pit.use")
-	public void fill(CommandSender sender, @Arg(value = "pit_name", description = "The name of the pit in question.")String name) {
+	public void fill(CommandSender sender, @Arg(value = "pit_name", description = "The name of the pit in question.") String name) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.fillPit(name));
 	}
 
@@ -120,7 +121,7 @@ public class Pit extends BaseCommand {
 
 
 	@Cmd(value="Provides info on the specified pit.", permission="pit.info")
-	public void info(CommandSender sender, @Arg(value = "pit_name", description = "The name of the pit in question.")String name) {
+	public void info(CommandSender sender, @Arg(value = "pit_name", description = "The name of the pit in question.") String name) {
 
 		ResourcePit thisPit = PitList.getPit(name);
 

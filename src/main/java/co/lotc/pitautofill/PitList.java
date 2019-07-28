@@ -95,14 +95,14 @@ public class PitList {
 	}
 
 	// Sets the given pit's region name.
-	public static String setPitRegion(String name, String region, String worldName) {
+	public static String setPitRegion(String name, String region, String world) {
 
 		String output = noPitFoundMsg(name.toUpperCase());
 
 		ResourcePit thisPit = getPit(name.toUpperCase());
 		if (thisPit != null) {
 			// Saves to config inside setRegion.
-			output = thisPit.setRegion(region, worldName);
+			output = thisPit.setRegion(region, world);
 		}
 		return output;
 	}
