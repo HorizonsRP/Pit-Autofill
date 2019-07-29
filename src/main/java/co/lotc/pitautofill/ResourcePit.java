@@ -255,7 +255,7 @@ public class ResourcePit {
 	So long as there're no players in the pit, fill it. If there are
 	players, return a message to the sender as such.
 	 */
-	public String fill() {
+	public String fill(String sender) {
 
 		String output = "Pit Autofill Error. Please check with your administrator.";
 		if (regionIsNotNull()) {
@@ -279,12 +279,12 @@ public class ResourcePit {
 						long timeSinceRefill = (int) ((new Date().getTime() - lastFilled.getTime()) / 1000);
 
 						if (timeSinceRefill > fillCooldown) {
-							output = changeBlocks();
+							output = changeBlocks(sender);
 						} else {
 							output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOUR + (fillCooldown - timeSinceRefill + 1) + " seconds" + PitAutofill.PREFIX + ".";
 						}
 					} else {
-						output = changeBlocks();
+						output = changeBlocks(sender);
 					}
 				} else {
 					output = "The pit is still too full. Please use what's currently there.";
@@ -336,7 +336,7 @@ public class ResourcePit {
 	higher than our random value. Once we do, set block location to the previous
 	material we checked.
 	 */
-	private String changeBlocks() {
+	private String changeBlocks(String sender) {
 		String output = "The pit has been refilled.";
 
 		boolean fillSuccessful = false;
@@ -369,8 +369,11 @@ public class ResourcePit {
 			}
 		}
 
-		if (fillSuccessful)
+		// Only want to change the date and log the player once.
+		if (fillSuccessful) {
 			lastFilled = new Date();
+			PitAutofill.get().getLogger().info(name + " pit filled by " + sender + ".");
+		}
 
 		return output;
 	}

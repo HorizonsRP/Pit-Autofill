@@ -155,13 +155,13 @@ public class PitList {
 	}
 
 	// Refills the given pit.
-	public static String fillPit(String name) {
+	public static String fillPit(String sender, String name) {
 
 		String output = noPitFoundMsg(name.toUpperCase());
 
 		ResourcePit thisPit = getPit(name.toUpperCase());
 		if (thisPit != null) {
-			output = thisPit.fill();
+			output = thisPit.fill(sender);
 		}
 		return output;
 	}
