@@ -108,6 +108,12 @@ public class Pit extends BaseCommand {
 	}
 
 
+	@Cmd(value="Refills the given pit regardless of cooldown.", permission="pit.edit")
+	public void fillo(CommandSender sender, @Arg(value = "pit_name", description = "The name of the pit in question.") String name) {
+		sender.sendMessage(PitAutofill.PREFIX + PitList.fillPitOverride(sender.getName(), name));
+	}
+
+
 	@Cmd(value="Refills the given pit.", permission="pit.use")
 	public void fill(CommandSender sender, @Arg(value = "pit_name", description = "The name of the pit in question.") String name) {
 		sender.sendMessage(PitAutofill.PREFIX + PitList.fillPit(sender.getName(), name));

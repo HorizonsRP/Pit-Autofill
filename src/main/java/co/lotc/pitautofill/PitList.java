@@ -166,6 +166,18 @@ public class PitList {
 		return output;
 	}
 
+	// Refills the given pit regardless of cooldown or refillvalue.
+	public static String fillPitOverride(String sender, String name) {
+
+		String output = noPitFoundMsg(name.toUpperCase());
+
+		ResourcePit thisPit = getPit(name.toUpperCase());
+		if (thisPit != null) {
+			output = thisPit.fillOverride(sender);
+		}
+		return output;
+	}
+
 	// Retrieves a string list of stored pits.
 	public static String getList() {
 		String output = PitAutofill.ALT_COLOUR + "";

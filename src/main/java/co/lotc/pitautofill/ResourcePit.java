@@ -299,13 +299,29 @@ public class ResourcePit {
 		return output;
 	}
 
+	// Runs the fill command after bypassing the cooldown and refill values in the config.
+	public String fillOverride(String sender) {
+		String output = "Pit Autofill Error. Please check with your administrator.";
+
+		int storedCooldown = PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
+		int storedRefillValue = PitAutofill.get().getConfig().getInt("pits." + name + ".refillValue");
+
+		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".cooldown", 0);
+		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".refillValue", 100);
+
+		output = fill(sender);
+
+		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".cooldown", storedCooldown);
+		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".refillValue", storedRefillValue);
+
+		return output;
+	}
+
 	// Returns true if there are any players inside the pit.
 	private boolean playersAreInside() {
 		boolean output = false;
 
-		// For each player create a location stripped of pitch and yaw.
 		for (Player player : Bukkit.getOnlinePlayers()) {
-			// If our player is in the same world
 			if (player.getWorld().equals(world)) {
 				Location loc = player.getLocation();
 				if (region.contains(BlockVector3.at(loc.getX(), loc.getY(), loc.getZ()))) {
@@ -313,7 +329,7 @@ public class ResourcePit {
 					break;
 				}
 			}
-		}// player for
+		}
 
 		return output;
 	}
