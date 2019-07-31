@@ -1,26 +1,27 @@
 package co.lotc.pitautofill;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-
 import com.griefcraft.lwc.LWCPlugin;
 import com.griefcraft.model.Protection;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
-
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
-import org.bukkit.plugin.Plugin;
+import net.lordofthecraft.omniscience.api.data.DataKeys;
+import net.lordofthecraft.omniscience.api.data.DataWrapper;
+import net.lordofthecraft.omniscience.api.entry.OEntry;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 
 public class ResourcePit {
 
@@ -33,17 +34,9 @@ public class ResourcePit {
 	// One Liner Gets
 	public boolean regionIsNotNull() { return region != null; }
 	public ProtectedRegion getRegion() { return region; }
-	public String getRegionName() { return region.getId(); }
-	public World getRegionWorld() {	return world; }
-	public String getName() { return name; }
-	public int getRefillValue() { return PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".refillValue"); }
-	public int getCooldown() { return PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".cooldown"); }
-
-
-	//// CONSTRUCTORS ////
-
 	// Constructor called on with given name. Initializes all other values.
-	public ResourcePit(String givenName) {
+	// Changed to package private as we dont need other projects trying to build their own pits - 501
+	ResourcePit(String givenName) {
 		name = givenName;
 		world = null;
 		blockTypes = new HashMap<>();
@@ -58,6 +51,26 @@ public class ResourcePit {
 			PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".cooldown", PitAutofill.get().getConfig().getInt("default-cooldown-value"));
 
 		PitAutofill.get().saveConfig();
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public int getRefillValue() {
+		return PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".refillValue");
+	}
+
+	public int getCooldown() {
+		return PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
+	}
+
+
+	//// CONSTRUCTORS ////
+
+	// If we don't need the method we can remove it safely
+	public World getRegionWorld() {
+		return world;
 	}
 
 
@@ -98,11 +111,10 @@ public class ResourcePit {
 	}
 
 	// Sets the pit's region to a worldguard region with the given name, if found.
-	public String setRegion(String regionName, String givenWorld) {
+	public String setRegion(String regionName, World thisWorld) {
 		String output = "Could not find a region with that name in that world.";
 
 		RegionContainer container = com.sk89q.worldguard.WorldGuard.getInstance().getPlatform().getRegionContainer();
-		World thisWorld = Bukkit.getWorld(givenWorld);
 
 		if (thisWorld != null) {
 			RegionManager worldRegions = container.get(BukkitAdapter.adapt(thisWorld));
@@ -110,11 +122,11 @@ public class ResourcePit {
 			// If our region set exists and has the specified region we set the pit's region to that.
 			if (worldRegions != null && worldRegions.hasRegion(regionName)) {
 				PitAutofill.get().getConfig().set("pits." + name + ".regionName", regionName);
-				PitAutofill.get().getConfig().set("pits." + name + ".worldName", givenWorld);
+				PitAutofill.get().getConfig().set("pits." + name + ".worldName", thisWorld.getName());
 				PitAutofill.get().saveConfig();
 
 				region = worldRegions.getRegion(regionName);
-				world = Bukkit.getWorld(givenWorld);
+				world = thisWorld;
 				output = "The pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "' has been assigned the region '" +
 						 PitAutofill.ALT_COLOUR + regionName + PitAutofill.PREFIX + "'.";
 			}
@@ -255,9 +267,10 @@ public class ResourcePit {
 	So long as there're no players in the pit, fill it. If there are
 	players, return a message to the sender as such.
 	 */
-	public String fill(String sender) {
+	public String fill(CommandSender sender) {
 
-		String output = "Pit Autofill Error. Please check with your administrator.";
+		// Any value that was here would be overridden regardless of situation. Also made final since we're going to be defining it once only.
+		final String output;
 		if (regionIsNotNull()) {
 			if (!playersAreInside()) {
 
@@ -270,8 +283,8 @@ public class ResourcePit {
 				}
 
 				if ((1f - (airCount / totalCount)) <= ((float) PitAutofill.get().getConfig().getInt("pits." + name + ".refillValue")) / 100) {
-					if (Bukkit.getPluginManager().isPluginEnabled("LWC"))
-						removeLocks();
+					// It's much better to include the "if lwc enabled" check inside of the method, as running this method when that value is false is impossible.
+					removeLocks();
 
 					long fillCooldown = PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
 
@@ -300,16 +313,15 @@ public class ResourcePit {
 	}
 
 	// Runs the fill command after bypassing the cooldown and refill values in the config.
-	public String fillOverride(String sender) {
-		String output = "Pit Autofill Error. Please check with your administrator.";
-
+	public String fillOverride(CommandSender sender) {
 		int storedCooldown = PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
 		int storedRefillValue = PitAutofill.get().getConfig().getInt("pits." + name + ".refillValue");
 
 		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".cooldown", 0);
 		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".refillValue", 100);
 
-		output = fill(sender);
+		// Moved initialization down, it isn't needed so high up when this value is used once.
+		final String output = fill(sender);
 
 		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".cooldown", storedCooldown);
 		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".refillValue", storedRefillValue);
@@ -337,13 +349,18 @@ public class ResourcePit {
 	// Removes all block locks within the region.
 	private void removeLocks() {
 		// For each location in the region, if there's a lock, remove it.
-		LWCPlugin lwcPlugin = (LWCPlugin) PitAutofill.get().getServer().getPluginManager().getPlugin("LWC");
-		for (Location loc : getLocationList()) {
-			Protection prot = lwcPlugin.getLWC().findProtection(loc);
-			if (prot != null) {
-				prot.remove();
+		if (Bukkit.getPluginManager().isPluginEnabled("LWC")) {
+			LWCPlugin lwcPlugin = (LWCPlugin) PitAutofill.get().getServer().getPluginManager().getPlugin("LWC");
+			if (lwcPlugin != null) { // Sanity check
+				for (Location loc : getLocationList()) {
+					Protection prot = lwcPlugin.getLWC().findProtection(loc);
+					if (prot != null) {
+						prot.remove();
+					}
+				}
 			}
 		}
+
 	}
 
 	/*
@@ -352,7 +369,7 @@ public class ResourcePit {
 	higher than our random value. Once we do, set block location to the previous
 	material we checked.
 	 */
-	private String changeBlocks(String sender) {
+	private String changeBlocks(CommandSender sender) {
 		String output = "The pit has been refilled.";
 
 		boolean fillSuccessful = false;
@@ -388,10 +405,27 @@ public class ResourcePit {
 		// Only want to change the date and log the player once.
 		if (fillSuccessful) {
 			lastFilled = new Date();
-			PitAutofill.get().getLogger().info(name + " pit filled by " + sender + ".");
+			PitAutofill.get().getLogger().info(name + " pit filled by " + sender.getName() + ".");
+			// Here since we've been successful let's go ahead and try to log to Omniscience
+			if (sender instanceof Player) {
+				logPitRefill((Player) sender);
+			}
 		}
 
 		return output;
+	}
+
+	/**
+	 * A small logger method that will check to see if Omniscience is enabled and if so will build the data we need for logging this event
+	 *
+	 * @param sender The player who sent the fill request
+	 */
+	private void logPitRefill(Player sender) {
+		if (Bukkit.getPluginManager().isPluginEnabled("Omniscience")) {
+			DataWrapper wrapper = DataWrapper.createNew();
+			wrapper.set(DataKeys.TARGET, name + " pit");
+			OEntry.create().player(sender).customWithLocation("refill", wrapper, sender.getLocation()).save();
+		}
 	}
 
 	// Returns a list of the block locations found in this region.

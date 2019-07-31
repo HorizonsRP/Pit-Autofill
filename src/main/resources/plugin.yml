@@ -5,6 +5,9 @@ api-version: '1.13'
 authors: [Korvic]
 description: A light plugin made to automate the filling of the resource pits at the Cloud Temple on Lord of the Craft.
 depend: [Tythan, WorldEdit, WorldGuard]
+# We soft depend on Omniscience because we want to log our data but we only really care about doing so if omniscience is running
+# Also not recording LWC as a dependency can lead to a LOT of headaches. Always include plugin dependencies in your plugin.yml!
+softdepend: [Omniscience,LWC]
 commands:
   pit:
     command: /<command>
