@@ -1,12 +1,4 @@
-# Standard Format:
-#
-#pits:
-#  pitName:
-#    regionName: 'String'
-#    worldName: 'world'
-#    blockTypes:
-#      block1: chance
-#      block2: chance
+# Pit-Autofill Saving
 default-refill-value: 30
 default-chance-value: 100
 default-cooldown-value: 0

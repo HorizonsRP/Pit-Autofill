@@ -401,6 +401,8 @@ public class ResourcePit {
 		// Only want to change the date and log the player once.
 		if (fillSuccessful) {
 			plugin.getConfig().set("pits." + name + ".lastFilled", System.currentTimeMillis());
+			plugin.saveConfig();
+
 			plugin.getLogger().info(name + " pit filled by " + sender.getName() + ".");
 
 			// Omniscience Logging
