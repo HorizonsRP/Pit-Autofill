@@ -29,11 +29,10 @@ public class ResourcePit {
 	private World world;                               // Stores the world the region resides in.
 	private HashMap<Material, Integer> blockTypes;     // Stored as block Material, chance Integer
 	private ProtectedRegion region;                    // Stores the WorldGuard region.
-	private Date lastFilled;                           // Stores the last date/time that this pit was filled.
+	private PitAutofill plugin;                        // Stores a reference to our main plugin instance.
 
-	// One Liner Gets
-	public boolean regionIsNotNull() { return region != null; }
-	public ProtectedRegion getRegion() { return region; }
+	//// CONSTRUCTORS ////
+
 	// Constructor called on with given name. Initializes all other values.
 	// Changed to package private as we dont need other projects trying to build their own pits - 501
 	ResourcePit(String givenName) {
@@ -41,34 +40,32 @@ public class ResourcePit {
 		world = null;
 		blockTypes = new HashMap<>();
 		region = null;
-		lastFilled = new Date();
-		lastFilled.setTime(0);
+		plugin = PitAutofill.get();
 
-		if (!PitAutofill.get().getConfig().isSet("pits." + name.toUpperCase() + ".refillValue"))
-			PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".refillValue", PitAutofill.get().getConfig().getInt("default-refill-value"));
+		if (!plugin.getConfig().isSet("pits." + name.toUpperCase() + ".refillValue"))
+			plugin.getConfig().set("pits." + name.toUpperCase() + ".refillValue", plugin.getConfig().getInt("default-refill-value"));
 
-		if (!PitAutofill.get().getConfig().isSet("pits." + name.toUpperCase() + ".cooldown"))
-			PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".cooldown", PitAutofill.get().getConfig().getInt("default-cooldown-value"));
+		if (!plugin.getConfig().isSet("pits." + name.toUpperCase() + ".cooldown"))
+			plugin.getConfig().set("pits." + name.toUpperCase() + ".cooldown", plugin.getConfig().getInt("default-cooldown-value"));
 
-		PitAutofill.get().saveConfig();
+		plugin.saveConfig();
 	}
 
 	public String getName() {
 		return name;
 	}
-
 	public int getRefillValue() {
-		return PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".refillValue");
+		return plugin.getConfig().getInt("pits." + name.toUpperCase() + ".refillValue");
 	}
-
 	public int getCooldown() {
-		return PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
+		return plugin.getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
 	}
-
-
-	//// CONSTRUCTORS ////
-
-	// If we don't need the method we can remove it safely
+	public ProtectedRegion getRegion() {
+		return region;
+	}
+	public boolean regionIsNotNull() {
+		return region != null;
+	}
 	public World getRegionWorld() {
 		return world;
 	}
@@ -97,11 +94,11 @@ public class ResourcePit {
 
 		String output = "Successfully changed the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "' to '" + PitAutofill.ALT_COLOUR + givenName + PitAutofill.PREFIX + "'.";
 
-		if(!PitAutofill.get().getConfig().isSet("pits." + givenName)) {
-			PitAutofill.get().getConfig().createSection("pits." + givenName);
-			copyConfigSection(PitAutofill.get().getConfig(), "pits." + name, "pits." + givenName);
-			PitAutofill.get().getConfig().set("pits." + name, null);
-			PitAutofill.get().saveConfig();
+		if(!plugin.getConfig().isSet("pits." + givenName)) {
+			plugin.getConfig().createSection("pits." + givenName);
+			copyConfigSection(plugin.getConfig(), "pits." + name, "pits." + givenName);
+			plugin.getConfig().set("pits." + name, null);
+			plugin.saveConfig();
 
 			name = givenName;
 		} else {
@@ -121,14 +118,14 @@ public class ResourcePit {
 
 			// If our region set exists and has the specified region we set the pit's region to that.
 			if (worldRegions != null && worldRegions.hasRegion(regionName)) {
-				PitAutofill.get().getConfig().set("pits." + name + ".regionName", regionName);
-				PitAutofill.get().getConfig().set("pits." + name + ".worldName", thisWorld.getName());
-				PitAutofill.get().saveConfig();
+				plugin.getConfig().set("pits." + name + ".regionName", regionName);
+				plugin.getConfig().set("pits." + name + ".worldName", thisWorld.getName());
+				plugin.saveConfig();
 
 				region = worldRegions.getRegion(regionName);
 				world = thisWorld;
-				output = "The pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "' has been assigned the region '" +
-						 PitAutofill.ALT_COLOUR + regionName + PitAutofill.PREFIX + "'.";
+				output = "The pit '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "' has been assigned the region '" +
+						 PitAutofill.ALT_COLOUR + regionName.toUpperCase() + PitAutofill.PREFIX + "'.";
 			}
 		} else {
 			output = "There is no world with that name.";
@@ -159,7 +156,7 @@ public class ResourcePit {
 				try {
 					chance = Integer.parseInt(arg.substring(chanceIndex+1));
 				} catch (NumberFormatException nfe) {
-					chance = PitAutofill.get().getConfig().getInt("default-chance-value");
+					chance = plugin.getConfig().getInt("default-chance-value");
 				}
 			} else {
 				type = arg;
@@ -173,11 +170,11 @@ public class ResourcePit {
 		if (newBlockTypes.keySet().size() > 0) {
 			blockTypes = checkChances(newBlockTypes);
 
-			PitAutofill.get().getConfig().set("pits." + name + ".blockTypes", null);
+			plugin.getConfig().set("pits." + name + ".blockTypes", null);
 			for (Material mat : blockTypes.keySet()) {
-				PitAutofill.get().getConfig().set("pits." + name + ".blockTypes." + mat.toString(), getBlockChance(mat));
+				plugin.getConfig().set("pits." + name + ".blockTypes." + mat.toString(), getBlockChance(mat));
 			}
-			PitAutofill.get().saveConfig();
+			plugin.saveConfig();
 		} else {
 			output = "Please specify the blocks and their chances.";
 		}
@@ -190,8 +187,8 @@ public class ResourcePit {
 		String output = "Please enter a number between 0 and 100.";
 
 		if (newValue >= 0 && newValue <= 100) {
-			PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".refillValue", newValue);
-			PitAutofill.get().saveConfig();
+			plugin.getConfig().set("pits." + name.toUpperCase() + ".refillValue", newValue);
+			plugin.saveConfig();
 			output = "Updated the minimum refill value for the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
 		}
 		return output;
@@ -203,8 +200,8 @@ public class ResourcePit {
 		String output = "Please enter a positive integer.";
 
 		if (cooldownValue >= 0) {
-			PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".cooldown", cooldownValue);
-			PitAutofill.get().saveConfig();
+			plugin.getConfig().set("pits." + name.toUpperCase() + ".cooldown", cooldownValue);
+			plugin.saveConfig();
 			output = "Updated the usage cooldown for the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
 		}
 		return output;
@@ -269,8 +266,8 @@ public class ResourcePit {
 	 */
 	public String fill(CommandSender sender) {
 
-		// Any value that was here would be overridden regardless of situation. Also made final since we're going to be defining it once only.
 		final String output;
+
 		if (regionIsNotNull()) {
 			if (!playersAreInside()) {
 
@@ -282,14 +279,13 @@ public class ResourcePit {
 					totalCount += 1f;
 				}
 
-				if ((1f - (airCount / totalCount)) <= ((float) PitAutofill.get().getConfig().getInt("pits." + name + ".refillValue")) / 100) {
-					// It's much better to include the "if lwc enabled" check inside of the method, as running this method when that value is false is impossible.
+				if ((1f - (airCount / totalCount)) <= ((float) plugin.getConfig().getInt("pits." + name + ".refillValue")) / 100) {
 					removeLocks();
 
-					long fillCooldown = PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
+					long fillCooldown = plugin.getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
 
 					if (fillCooldown > 0) {
-						long timeSinceRefill = (int) ((new Date().getTime() - lastFilled.getTime()) / 1000);
+						long timeSinceRefill = (System.currentTimeMillis() - plugin.getConfig().getLong("pits." + name + ".lastFilled")) / 1000;
 
 						if (timeSinceRefill > fillCooldown) {
 							output = changeBlocks(sender);
@@ -314,17 +310,17 @@ public class ResourcePit {
 
 	// Runs the fill command after bypassing the cooldown and refill values in the config.
 	public String fillOverride(CommandSender sender) {
-		int storedCooldown = PitAutofill.get().getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
-		int storedRefillValue = PitAutofill.get().getConfig().getInt("pits." + name + ".refillValue");
+		int storedCooldown = plugin.getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
+		int storedRefillValue = plugin.getConfig().getInt("pits." + name + ".refillValue");
 
-		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".cooldown", 0);
-		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".refillValue", 100);
+		plugin.getConfig().set("pits." + name.toUpperCase() + ".cooldown", 0);
+		plugin.getConfig().set("pits." + name.toUpperCase() + ".refillValue", 100);
 
 		// Moved initialization down, it isn't needed so high up when this value is used once.
 		final String output = fill(sender);
 
-		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".cooldown", storedCooldown);
-		PitAutofill.get().getConfig().set("pits." + name.toUpperCase() + ".refillValue", storedRefillValue);
+		plugin.getConfig().set("pits." + name.toUpperCase() + ".cooldown", storedCooldown);
+		plugin.getConfig().set("pits." + name.toUpperCase() + ".refillValue", storedRefillValue);
 
 		return output;
 	}
@@ -350,7 +346,7 @@ public class ResourcePit {
 	private void removeLocks() {
 		// For each location in the region, if there's a lock, remove it.
 		if (Bukkit.getPluginManager().isPluginEnabled("LWC")) {
-			LWCPlugin lwcPlugin = (LWCPlugin) PitAutofill.get().getServer().getPluginManager().getPlugin("LWC");
+			LWCPlugin lwcPlugin = (LWCPlugin) plugin.getServer().getPluginManager().getPlugin("LWC");
 			if (lwcPlugin != null) { // Sanity check
 				for (Location loc : getLocationList()) {
 					Protection prot = lwcPlugin.getLWC().findProtection(loc);
@@ -404,9 +400,10 @@ public class ResourcePit {
 
 		// Only want to change the date and log the player once.
 		if (fillSuccessful) {
-			lastFilled = new Date();
-			PitAutofill.get().getLogger().info(name + " pit filled by " + sender.getName() + ".");
-			// Here since we've been successful let's go ahead and try to log to Omniscience
+			plugin.getConfig().set("pits." + name + ".lastFilled", System.currentTimeMillis());
+			plugin.getLogger().info(name + " pit filled by " + sender.getName() + ".");
+
+			// Omniscience Logging
 			if (sender instanceof Player) {
 				logPitRefill((Player) sender);
 			}
