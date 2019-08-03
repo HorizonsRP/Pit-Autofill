@@ -21,20 +21,18 @@ import java.util.stream.Collectors;
 
 public class PitAutofill extends JavaPlugin {
 
-    public static final String PREFIX = (ChatColor.DARK_GREEN + "");      // The same colouring prefix to be used throughout the plugin.
+    public static final String PREFIX = (ChatColor.DARK_GREEN + ""); // The same colouring prefix to be used throughout the plugin.
     public static final String ALT_COLOUR = (ChatColor.YELLOW + "");
 
-    private static PitAutofill instance;
-    // Provides an accessor to our current instance.
+    private static PitAutofill instance; // Keeps a static copy of our current instance and an accessor for it.
     public static PitAutofill get() {
         return instance;
     }
 
-    // Caching our default values so we don't go back to the yaml for it
-    long defaultCooldown;
+    long defaultCooldown;    // Default values for pit settings if unspecified.
     int defaultRefillValue;
-    // Making this value non static now that we're passing plugin by reference
-    private ArrayList<ResourcePit> allPitsList = new ArrayList<>();
+    int defaultChanceValue;
+    private ArrayList<ResourcePit> allPitsList = new ArrayList<>(); // List of our currently loaded pits.
 
     @Override
     public void onLoad() {
@@ -44,15 +42,16 @@ public class PitAutofill extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        this.defaultRefillValue = getConfig().getInt("default-refill-value");
         this.defaultCooldown = getConfig().getLong("default-cooldown-value");
+        this.defaultRefillValue = getConfig().getInt("default-refill-value");
+        this.defaultChanceValue = getConfig().getInt("default-chance-value");
 
         init();
 
         Bukkit.getPluginManager().registerEvents(new FillSignListener(this), this);
 
         registerParameters();
-        // We renamed Pit to PitCommand, a bit nicer to explain
+
         Commands.build(getCommand("pit"), PitCommand::new);
 
         registerOmniEvent();
@@ -88,7 +87,7 @@ public class PitAutofill extends JavaPlugin {
 
     //// STARTUP ////
 
-    // Iterate through our list of pits for each world, plugging in the required info if specified in the config.
+    // Iterate through our list of pits, pre-loading all specified info from the config.
     private void init() {
 
         FileConfiguration config = getConfig();
@@ -98,30 +97,26 @@ public class PitAutofill extends JavaPlugin {
 
         for (String pitName : config.getConfigurationSection("pits").getKeys(false)) {
 
-            // Lot of reworks here. We're going through and building each Pit from all available data initially
-            // so that we don't have to go back for it
-
-            // Grab the config section that represents this pit
-            ConfigurationSection section = config.getConfigurationSection("pits." + pitName);
-            if (section == null) {
+            // Grab the config section that represents this pit. If null break this iteration.
+            ConfigurationSection pitNameSection = config.getConfigurationSection("pits." + pitName);
+            if (pitNameSection == null) {
                 getLogger().warning("Section was null for the pit " + pitName);
                 continue;
             }
 
-            // Because we're using the config section it's the same as doing pits.<name>.regionName
-            String regionName = section.getString("regionName");
-            String worldName = section.getString("worldName");
-            // Go ahead and parse these values
-            long cooldown = section.getLong("cooldown");
-            long lastRefill = section.getLong("lastRefill");
-            int refillValue = section.getInt("refillValue");
+            // Load basic values
+            String regionName = pitNameSection.getString("regionName");
+            String worldName = pitNameSection.getString("worldName");
+            long cooldown = pitNameSection.getLong("cooldown");
+            long lastRefill = pitNameSection.getLong("lastRefill");
+            int refillValue = pitNameSection.getInt("refillValue");
 
+            // Grab a string list of the 'block:chance'
             ArrayList<String> blockTypes = new ArrayList<>();
-
-            ConfigurationSection configSection = section.getConfigurationSection("blockTypes");
-            if (configSection != null) {
-                for (String block : configSection.getKeys(false)) {
-                    blockTypes.add(block + ":" + configSection.getInt(block));
+            ConfigurationSection blockTypeSection = pitNameSection.getConfigurationSection("blockTypes");
+            if (blockTypeSection != null) {
+                for (String block : blockTypeSection.getKeys(false)) {
+                    blockTypes.add(block + ":" + blockTypeSection.getInt(block));
                 }
             } else {
                 getLogger().warning("Block type was null for pit " + pitName);
@@ -133,6 +128,7 @@ public class PitAutofill extends JavaPlugin {
                 continue;
             }
 
+            // Convert ArrayList to String[]
             String[] stringedBlockTypes = new String[blockTypes.size()];
             if (blockTypes.size() > 0) {
                 for (int i = 0; i < stringedBlockTypes.length; i++) {
@@ -145,18 +141,14 @@ public class PitAutofill extends JavaPlugin {
             ProtectedRegion region = getRegion(regionName, world);
 
             // Create a new pit using our parsed values
-            // This is a builder pattern, it basically makes it much simpler to do
-            // Constructer overloads. Imagine if we had to build a constructor for
-            // each possible variation of ResourcePit? We'd all go insane.
-            // Here if you exclude say "cooldown" it defaults to null!
             ResourcePit pit = ResourcePit.builder(pitName)
-                    .cooldown(cooldown)
-                    .refillValue(refillValue)
-                    .lastUse(lastRefill)
-                    .blockTypes(stringedBlockTypes)
-                    .world(world)
-                    .region(region)
-                    .build();
+                                         .cooldown(cooldown)
+                                         .refillValue(refillValue)
+                                         .lastUse(lastRefill)
+                                         .blockTypes(stringedBlockTypes)
+                                         .world(world)
+                                         .region(region)
+                                         .build();
 
             // Register the pit
             this.addPit(pit);
@@ -166,10 +158,9 @@ public class PitAutofill extends JavaPlugin {
 
     //// PUBLIC ////
 
-    // This method is a generic method, and is specific to a plugin not an individual pit. Makes more sense to be here.
-    // Sets the chanceValue.
+    // Sets the defaultChanceValue.
     public void setDefaultChanceValue(int newValue) {
-        // Check out save() on ResourcePit for an excerpt on this
+        defaultChanceValue = newValue;
         Run.as(this).async(() -> {
             this.getConfig().set("default-chance-value", newValue);
             this.saveConfig();
@@ -222,18 +213,6 @@ public class PitAutofill extends JavaPlugin {
     }
 
     //// PRIVATE ////
-
-    // Refills the given pit.
-    boolean fillPit(CommandSender sender, String name) {
-
-        ResourcePit thisPit = getPit(name.toUpperCase());
-        if (thisPit != null) {
-            return thisPit.fill(sender, false);
-        } else {
-            sender.sendMessage(PREFIX + noPitFoundMsg(name.toUpperCase()));
-            return false;
-        }
-    }
 
     // Returns the pit not found error message.
     private String noPitFoundMsg(String name) {

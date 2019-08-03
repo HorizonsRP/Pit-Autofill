@@ -27,7 +27,6 @@ public class FillSignListener implements Listener {
 		if (event.getHand() == EquipmentSlot.HAND) {
 
 			Block block = event.getClickedBlock();
-
 			if (block != null) {
 
 				// RClick && Either Sign Type
@@ -37,15 +36,15 @@ public class FillSignListener implements Listener {
 
 					Sign sign = (Sign) block.getState();
 					if (sign.getLine(1).equalsIgnoreCase(SIGN_IDENTIFIER)) {
+
 						if (event.getPlayer().hasPermission("pit.use")) {
-                            // Abstracting logic a bit so that it's not inside of the message
-							boolean result = plugin.fillPit(event.getPlayer(), sign.getLine(2).replace(' ', '_'));
-							if (result) {
-								event.getPlayer().sendMessage(PitAutofill.PREFIX + "Successfully filled this pit");
-							}
+							ResourcePit pit = plugin.getPit(sign.getLine(2).replace(' ', '_'));
+							String result = pit.fill(event.getPlayer(), false);
+							event.getPlayer().sendMessage(result);
 						} else {
 							event.getPlayer().sendMessage(PitAutofill.PREFIX + "You cannot refill the pits.");
 						}
+
 					}
 				}
 

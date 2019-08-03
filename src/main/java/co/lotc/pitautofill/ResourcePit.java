@@ -22,15 +22,13 @@ import java.util.Objects;
 public class ResourcePit {
 
     private static final PitAutofill plugin = PitAutofill.get(); // Stores a reference to our main plugin instance.
-	private String name;                                  // The name/ID of the pit.
-	private World world;                                  // Stores the world the region resides in.
-	private HashMap<Material, Integer> blockTypes;        // Stored as block Material, chance Integer
-	private ProtectedRegion region;                       // Stores the WorldGuard region.
-    // These values are not using int or long primitives because primitives cannot be null. These can be!
-    // Always something to keep in mind when working with these
-    private Integer refillValue;                          // Stores the % that needs to be remaining to reset this pit
-    private Long cooldown;                                  // Stores the cooldown in milliseconds that'll be applied when it's refilled
-    private Long lastUse;                                  // Stores the last use of this pit
+	private String name;                                         // The name/ID of the pit.
+	private World world;                                         // Stores the world the region resides in.
+	private HashMap<Material, Integer> blockTypes;               // Stored as block Material, chance Integer
+	private ProtectedRegion region;                              // Stores the WorldGuard region.
+    private Integer refillValue;                                 // Stores the % that needs to be remaining to reset this pit
+    private Long cooldown;                                       // Stores the cooldown in milliseconds that'll be applied when it's refilled
+    private Long lastUse;                                        // Stores the last use of this pit
 
     private ResourcePit(String name, World world, String[] blockTypes, ProtectedRegion region, Integer refillValue, Long cooldown, Long lastUse) {
 		this.name = name;
@@ -52,11 +50,16 @@ public class ResourcePit {
 		return name;
 	}
 
+	public long getCooldown() {
+		return cooldown;
+	}
 	public int getRefillValue() {
 		return refillValue;
 	}
+	public long getLastUse() {
+		return lastUse;
+	}
 
-	// Sets the refillValue.
 	public ProtectedRegion getRegion() {
 		return region;
 	}
@@ -67,9 +70,13 @@ public class ResourcePit {
 		return world;
 	}
 
-	public long getCooldown() {
-		return cooldown;
-	}
+	//// MODIFIERS ////
+
+	// Sets the pit's refill value as a non-decimal percent value.
+    public void setRefillValue(int newValue) {
+        this.refillValue = newValue;
+        save();
+    }
 
 	// Sets the pit's cooldown in milliseconds.
 	public void setCooldown(long cooldownValue) {
@@ -77,21 +84,11 @@ public class ResourcePit {
 		save();
 	}
 
-	//// MODIFIERS ////
-
-	public long getLastUse() {
-		return lastUse;
-	}
-
+	// Sets the pit's last use time in date milliseconds.
 	public void setLastUse(long lastUse) {
 		this.lastUse = lastUse;
 		save();
 	}
-
-    public void setRefillValue(int newValue) {
-        this.refillValue = newValue;
-        save();
-    }
 
 	// Sets the region's name to the new name.
 	public String setName(String givenName) {
@@ -109,7 +106,7 @@ public class ResourcePit {
 
 			name = givenName;
 		} else {
-			output = "A pit with that name already exists Please delete it before copying over it.";
+			output = "A pit with that name already exists. Please delete it before using that name.";
 		}
 		return output;
 	}
@@ -229,7 +226,7 @@ public class ResourcePit {
 	So long as there're no players in the pit, fill it. If there are
 	players, return a message to the sender as such.
 	 */
-	public boolean fill(CommandSender sender, boolean override) {
+	public String fill(CommandSender sender, boolean override) {
 
 		final String output;
 
@@ -250,12 +247,10 @@ public class ResourcePit {
 					if (cooldown > 0 && lastUse != null && !override) {
 						// Subtract the last use plus the cooldown from the current time to check the diff
 						long remainingTime = (lastUse + cooldown) - System.currentTimeMillis();
-						// If diff doesnt exist then lets change blocks
 						if (remainingTime <= 0) {
 							output = changeBlocks(sender, false);
 						} else {
-							// Print that things are still on CD using tythan time util
-							output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOUR + TimeUtil.printMillis(remainingTime).toPlainText() + ChatColor.RED + ".";
+							output = "That pit is still on cooldown for " + TimeUtil.printMillis(remainingTime).toPlainText() + ".";
 						}
 					} else {
 						output = changeBlocks(sender, override);
@@ -271,10 +266,10 @@ public class ResourcePit {
 		}
 
 		if (output != null) {
-			sender.sendMessage(ChatColor.DARK_RED + "Error: " + ChatColor.RED + output);
-			return false;
+			return "Error: " + PitAutofill.ALT_COLOUR + output;
+		} else {
+			return "Successfully filled the pit '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
 		}
-		return true;
 	}
 
 	// Returns true if there are any players inside the pit.
