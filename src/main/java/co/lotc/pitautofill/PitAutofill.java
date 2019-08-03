@@ -1,7 +1,12 @@
 package co.lotc.pitautofill;
 
 import co.lotc.core.bukkit.command.Commands;
-import co.lotc.pitautofill.cmd.Pit;
+import co.lotc.core.bukkit.util.Run;
+import co.lotc.pitautofill.cmd.PitCommand;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import net.lordofthecraft.omniscience.api.OmniApi;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -25,7 +30,9 @@ public class PitAutofill extends JavaPlugin {
         return instance;
     }
 
-    private static ArrayList<ResourcePit> allPitsList = new ArrayList<>();
+    long defaultCooldown;
+    int defaultRefillValue;
+    private ArrayList<ResourcePit> allPitsList = new ArrayList<>();
 
     @Override
     public void onLoad() {
@@ -35,13 +42,15 @@ public class PitAutofill extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        this.defaultRefillValue = getConfig().getInt("default-refill-value");
+        this.defaultCooldown = getConfig().getLong("default-cooldown-value");
 
         init();
 
         Bukkit.getPluginManager().registerEvents(new FillSignListener(this), this);
 
         registerParameters();
-        Commands.build(getCommand("pit"), Pit::new);
+        Commands.build(getCommand("pit"), PitCommand::new);
 
         registerOmniEvent();
     }
@@ -86,54 +95,79 @@ public class PitAutofill extends JavaPlugin {
 
         for (String pitName : config.getConfigurationSection("pits").getKeys(false)) {
 
-            String regionName = config.getString("pits." + pitName + ".regionName");
-            String worldName = config.getString("pits." + pitName + ".worldName");
+            ConfigurationSection section = config.getConfigurationSection("pits." + pitName);
+            if (section == null) {
+                getLogger().warning("Section was null for the pit " + pitName);
+                continue;
+            }
+
+            String regionName = section.getString("regionName");
+            String worldName = section.getString("worldName");
+            long cooldown = section.getLong("cooldown");
+            long lastRefill = section.getLong("lastRefill");
+            int refillValue = section.getInt("refillValue");
+
             ArrayList<String> blockTypes = new ArrayList<>();
 
-            ConfigurationSection configSection = config.getConfigurationSection("pits." + pitName + ".blockTypes");
+            ConfigurationSection configSection = section.getConfigurationSection("blockTypes");
             if (configSection != null) {
                 for (String block : configSection.getKeys(false)) {
-                    blockTypes.add(block + ":" + config.getInt("pits." + pitName + ".blockTypes." + block));
+                    blockTypes.add(block + ":" + configSection.getInt(block));
                 }
+            } else {
+                getLogger().warning("Block type was null for pit " + pitName);
             }
 
-            PitAutofill.get().getServer().getLogger().info("[Pit-Autofill] " + ChatColor.stripColor(newPit(pitName)));
-
-            if (regionName != null) {
-                setPitRegion(pitName, regionName, worldName != null ? Bukkit.getWorld(worldName) : null);
+            // Validate we haven't loaded this pit yet
+            if (allPitsList.stream().anyMatch(pit -> pit.getName().equalsIgnoreCase(pitName))) {
+                getLogger().severe("A duplicate pit with the name " + pitName + " was already found");
+                continue;
             }
 
+            String[] stringedBlockTypes = new String[blockTypes.size()];
             if (blockTypes.size() > 0) {
-                String[] stringedBlockTypes = new String[blockTypes.size()];
+
                 for (int i = 0; i < stringedBlockTypes.length; i++) {
                     stringedBlockTypes[i] = blockTypes.get(i);
                 }
-
-                setPitBlocks(pitName, stringedBlockTypes);
             }
+
+            World world = worldName != null ? Bukkit.getWorld(worldName) : null;
+            ProtectedRegion region = getRegion(regionName, world);
+
+            // Create a new pit using our parsed values
+            ResourcePit pit = ResourcePit.builder(pitName)
+                    .cooldown(cooldown)
+                    .refillValue(refillValue)
+                    .lastUse(lastRefill)
+                    .blockTypes(stringedBlockTypes)
+                    .world(world)
+                    .region(region)
+                    .build();
+
+            // Register the pit
+            this.addPit(pit);
         }
 
     }
 
-
     //// PUBLIC ////
 
-    // Create a new pit with the given name and add to our list.
-    public String newPit(String name) {
+    // This method is a generic method, and is specific to a plugin not an individual pit. Makes more sense to be here.
+    // Sets the chanceValue.
+    public void setDefaultChanceValue(int newValue) {
+        Run.as(this).async(() -> {
+            this.getConfig().set("default-chance-value", newValue);
+            this.saveConfig();
+        });
+    }
 
-        String output = "A pit with that name already exists.";
+    public void addPit(ResourcePit pit) {
+        allPitsList.add(pit);
+    }
 
-        if (getPit(name.toUpperCase()) == null) {
-            if (!this.getConfig().isSet("pits." + name.toUpperCase())) {
-                this.getConfig().createSection("pits." + name.toUpperCase());
-                PitAutofill.get().saveConfig();
-            }
-
-            allPitsList.add(new ResourcePit(name.toUpperCase()));
-
-            output = "Successfully created the pit '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
-        }
-        return output;
+    public ArrayList<ResourcePit> getPits() {
+        return allPitsList;
     }
 
     // Remove the pit with the same name from our list.
@@ -150,58 +184,8 @@ public class PitAutofill extends JavaPlugin {
         return output;
     }
 
-    // Sets the given pit's region name.
-    public String setPitRegion(String name, String region, World world) {
-
-        String output = noPitFoundMsg(name.toUpperCase());
-
-        ResourcePit thisPit = getPit(name.toUpperCase());
-        if (thisPit != null) {
-            // Saves to config inside setRegion.
-            output = thisPit.setRegion(region, world);
-        }
-        return output;
-    }
-
-    // Retrieves a string list of stored pits.
-    public String getList() {
-        StringBuilder output = new StringBuilder(PitAutofill.ALT_COLOUR + "");
-        boolean firstName = true;
-
-        for (ResourcePit pit : allPitsList) {
-            if (firstName) {
-                output.append(pit.getName().toUpperCase());
-                firstName = false;
-            } else {
-                output.append(", ").append(pit.getName().toUpperCase());
-            }
-        }
-
-        return output.toString();
-    }
-
-
-    //// PRIVATE ////
-
-    // Refills the given pit.
-    String fillPit(CommandSender sender, String name) {
-
-        String output = noPitFoundMsg(name.toUpperCase());
-
-        ResourcePit thisPit = getPit(name.toUpperCase());
-        if (thisPit != null) {
-            output = thisPit.fill(sender);
-        }
-        return output;
-    }
-
-    // Returns the pit not found error message.
-    private String noPitFoundMsg(String name) {
-        return "No pit found with the name '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
-    }
-
     // Returns the ResourcePit with the matching name.
-    private ResourcePit getPit(String name) {
+    public ResourcePit getPit(String name) {
 
         for (ResourcePit thisPit : allPitsList) {
             if (thisPit.getName().equalsIgnoreCase(name.toUpperCase()))
@@ -210,13 +194,34 @@ public class PitAutofill extends JavaPlugin {
         return null;
     }
 
-    // Sets the given pit's block types.
-    private void setPitBlocks(String name, String[] blockTypes) {
+    public ProtectedRegion getRegion(String id, World world) {
+        if (world == null) {
+            return null;
+        }
+        RegionManager manager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(world));
+        if (manager == null) {
+            return null;
+        }
+        return manager.getRegion(id);
+    }
+
+    //// PRIVATE ////
+
+    // Refills the given pit.
+    boolean fillPit(CommandSender sender, String name) {
+
         ResourcePit thisPit = getPit(name.toUpperCase());
         if (thisPit != null) {
-            // Saves to config inside setBlockTypes.
-            thisPit.setBlockTypes(blockTypes);
+            return thisPit.fill(sender, false);
+        } else {
+            sender.sendMessage(PREFIX + noPitFoundMsg(name.toUpperCase()));
+            return false;
         }
+    }
+
+    // Returns the pit not found error message.
+    private String noPitFoundMsg(String name) {
+        return "No pit found with the name '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
     }
 
 }

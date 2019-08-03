@@ -1,64 +1,63 @@
 package co.lotc.pitautofill;
 
+import co.lotc.core.bukkit.util.Run;
+import co.lotc.core.util.TimeUtil;
 import com.griefcraft.lwc.LWCPlugin;
 import com.griefcraft.model.Protection;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import com.sk89q.worldguard.protection.regions.RegionContainer;
 import net.lordofthecraft.omniscience.api.data.DataKeys;
 import net.lordofthecraft.omniscience.api.data.DataWrapper;
 import net.lordofthecraft.omniscience.api.entry.OEntry;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class ResourcePit {
 
-	private String name;                               // The name/ID of the pit.
-	private World world;                               // Stores the world the region resides in.
-	private HashMap<Material, Integer> blockTypes;     // Stored as block Material, chance Integer
-	private ProtectedRegion region;                    // Stores the WorldGuard region.
-	private PitAutofill plugin;                        // Stores a reference to our main plugin instance.
+	private final PitAutofill plugin = PitAutofill.get(); // Stores a reference to our main plugin instance.
+	private String name;                                  // The name/ID of the pit.
+	private World world;                                  // Stores the world the region resides in.
+	private HashMap<Material, Integer> blockTypes;        // Stored as block Material, chance Integer
+	private ProtectedRegion region;                       // Stores the WorldGuard region.
+	private Integer refillValue;
+	private Long cooldown;
+	private Long lastUse;
+
+	public ResourcePit(String name, World world, String[] blockTypes, ProtectedRegion region, Integer refillValue, Long cooldown, Long lastUse) {
+		this.name = name;
+		this.world = world;
+		this.blockTypes = blockTypes != null && blockTypes.length > 0 ? convertBlockTypes(blockTypes) : new HashMap<>();
+		this.region = region;
+		this.refillValue = refillValue;
+		this.cooldown = cooldown;
+		this.lastUse = lastUse;
+	}
 
 	//// CONSTRUCTORS ////
 
-	// Constructor called on with given name. Initializes all other values.
-	// Changed to package private as we dont need other projects trying to build their own pits - 501
-	ResourcePit(String givenName) {
-		name = givenName;
-		world = null;
-		blockTypes = new HashMap<>();
-		region = null;
-		plugin = PitAutofill.get();
-
-		if (!plugin.getConfig().isSet("pits." + name.toUpperCase() + ".refillValue"))
-			plugin.getConfig().set("pits." + name.toUpperCase() + ".refillValue", plugin.getConfig().getInt("default-refill-value"));
-
-		if (!plugin.getConfig().isSet("pits." + name.toUpperCase() + ".cooldown"))
-			plugin.getConfig().set("pits." + name.toUpperCase() + ".cooldown", plugin.getConfig().getInt("default-cooldown-value"));
-
-		plugin.saveConfig();
+	public static Builder builder(String name) {
+		return new Builder(name);
 	}
 
 	public String getName() {
 		return name;
 	}
+
 	public int getRefillValue() {
-		return plugin.getConfig().getInt("pits." + name.toUpperCase() + ".refillValue");
+		return refillValue;
 	}
-	public int getCooldown() {
-		return plugin.getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
+
+	// Sets the refillValue.
+	public void setRefillValue(int newValue) {
+		this.refillValue = newValue;
+		save();
 	}
 	public ProtectedRegion getRegion() {
 		return region;
@@ -70,24 +69,32 @@ public class ResourcePit {
 		return world;
 	}
 
-
-	//// STATIC ////
-
-	// Sets the chanceValue.
-	public static String setDefaultChanceValue(int newValue) {
-
-		String output = "Please enter a number between 0 and 100.";
-
-		if (newValue >= 0 && newValue <= 100) {
-			PitAutofill.get().getConfig().set("default-chance-value", newValue);
-			PitAutofill.get().saveConfig();
-			output = "Updated the default chance value for all pits.";
-		}
-		return output;
+	public long getCooldown() {
+		return cooldown;
 	}
 
+	// Sets the pit's cooldown in milliseconds.
+	public void setCooldown(long cooldownValue) {
+
+		this.cooldown = cooldownValue;
+		save();
+
+		if (cooldown >= 0) {
+			plugin.getConfig().set("pits." + name.toUpperCase() + ".cooldown", cooldownValue);
+			plugin.saveConfig();
+		}
+	}
 
 	//// MODIFIERS ////
+
+	public long getLastUse() {
+		return lastUse;
+	}
+
+	public void setLastUse(long lastUse) {
+		this.lastUse = lastUse;
+		save();
+	}
 
 	// Sets the region's name to the new name.
 	public String setName(String givenName) {
@@ -95,10 +102,13 @@ public class ResourcePit {
 		String output = "Successfully changed the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "' to '" + PitAutofill.ALT_COLOUR + givenName + PitAutofill.PREFIX + "'.";
 
 		if(!plugin.getConfig().isSet("pits." + givenName)) {
-			plugin.getConfig().createSection("pits." + givenName);
-			copyConfigSection(plugin.getConfig(), "pits." + name, "pits." + givenName);
-			plugin.getConfig().set("pits." + name, null);
-			plugin.saveConfig();
+			// See save() for info
+			Run.as(plugin).async(() -> {
+				plugin.getConfig().createSection("pits." + givenName);
+				copyConfigSection(plugin.getConfig(), "pits." + name, "pits." + givenName);
+				plugin.getConfig().set("pits." + name, null);
+				plugin.saveConfig();
+			});
 
 			name = givenName;
 		} else {
@@ -108,29 +118,10 @@ public class ResourcePit {
 	}
 
 	// Sets the pit's region to a worldguard region with the given name, if found.
-	public String setRegion(String regionName, World thisWorld) {
-		String output = "Could not find a region with that name in that world.";
-
-		RegionContainer container = com.sk89q.worldguard.WorldGuard.getInstance().getPlatform().getRegionContainer();
-
-		if (thisWorld != null) {
-			RegionManager worldRegions = container.get(BukkitAdapter.adapt(thisWorld));
-
-			// If our region set exists and has the specified region we set the pit's region to that.
-			if (worldRegions != null && worldRegions.hasRegion(regionName)) {
-				plugin.getConfig().set("pits." + name + ".regionName", regionName);
-				plugin.getConfig().set("pits." + name + ".worldName", thisWorld.getName());
-				plugin.saveConfig();
-
-				region = worldRegions.getRegion(regionName);
-				world = thisWorld;
-				output = "The pit '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "' has been assigned the region '" +
-						 PitAutofill.ALT_COLOUR + regionName.toUpperCase() + PitAutofill.PREFIX + "'.";
-			}
-		} else {
-			output = "There is no world with that name.";
-		}
-		return output;
+	public void setRegion(ProtectedRegion region, World world) {
+		this.region = region;
+		this.world = world;
+		save();
 	}
 
 	/*
@@ -139,9 +130,25 @@ public class ResourcePit {
 	of that type being placed.
 	 */
 	public String setBlockTypes(String[] blockAndChance) {
+		HashMap<Material, Integer> newBlockTypes = convertBlockTypes(blockAndChance);
 
-		String output = "Successfully updated the pit block types.";
+		if (newBlockTypes.keySet().size() > 0) {
+			blockTypes = checkChances(newBlockTypes);
+
+			save();
+		} else {
+			return "Please specify the blocks and their chances.";
+		}
+		return null;
+	}
+
+	private HashMap<Material, Integer> convertBlockTypes(String[] blockAndChance) {
 		HashMap<Material, Integer> newBlockTypes = new HashMap<>();
+
+		if (blockAndChance == null) {
+			plugin.getLogger().severe("Block and chance was null for the pit " + name);
+			return newBlockTypes;
+		}
 
 		for (String arg : blockAndChance) {
 
@@ -166,45 +173,7 @@ public class ResourcePit {
 			if (thisMaterial != null)
 				newBlockTypes.put(thisMaterial, chance);
 		}
-
-		if (newBlockTypes.keySet().size() > 0) {
-			blockTypes = checkChances(newBlockTypes);
-
-			plugin.getConfig().set("pits." + name + ".blockTypes", null);
-			for (Material mat : blockTypes.keySet()) {
-				plugin.getConfig().set("pits." + name + ".blockTypes." + mat.toString(), getBlockChance(mat));
-			}
-			plugin.saveConfig();
-		} else {
-			output = "Please specify the blocks and their chances.";
-		}
-		return output;
-	}
-
-	// Sets the refillValue.
-	public String setRefillValue(int newValue) {
-
-		String output = "Please enter a number between 0 and 100.";
-
-		if (newValue >= 0 && newValue <= 100) {
-			plugin.getConfig().set("pits." + name.toUpperCase() + ".refillValue", newValue);
-			plugin.saveConfig();
-			output = "Updated the minimum refill value for the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
-		}
-		return output;
-	}
-
-	// Sets the pit's cooldown in seconds.
-	public String setCooldown(int cooldownValue) {
-
-		String output = "Please enter a positive integer.";
-
-		if (cooldownValue >= 0) {
-			plugin.getConfig().set("pits." + name.toUpperCase() + ".cooldown", cooldownValue);
-			plugin.saveConfig();
-			output = "Updated the usage cooldown for the pit '" + PitAutofill.ALT_COLOUR + name + PitAutofill.PREFIX + "'.";
-		}
-		return output;
+		return newBlockTypes;
 	}
 
 
@@ -249,7 +218,6 @@ public class ResourcePit {
 
 	// Recursively copies all data at the given configurationSection under the new name.
 	private void copyConfigSection(FileConfiguration config, String oldPath, String newPath) {
-
 		ConfigurationSection cs = config.getConfigurationSection(oldPath);
 		if (cs != null) {
 			for (String key : cs.getKeys(false)) {
@@ -264,7 +232,7 @@ public class ResourcePit {
 	So long as there're no players in the pit, fill it. If there are
 	players, return a message to the sender as such.
 	 */
-	public String fill(CommandSender sender) {
+	public boolean fill(CommandSender sender, boolean override) {
 
 		final String output;
 
@@ -279,21 +247,21 @@ public class ResourcePit {
 					totalCount += 1f;
 				}
 
-				if ((1f - (airCount / totalCount)) <= ((float) plugin.getConfig().getInt("pits." + name + ".refillValue")) / 100) {
+				if (override || ((1f - (airCount / totalCount)) <= ((float) refillValue) / 100)) {
 					removeLocks();
 
-					long fillCooldown = plugin.getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
-
-					if (fillCooldown > 0) {
-						long timeSinceRefill = (System.currentTimeMillis() - plugin.getConfig().getLong("pits." + name + ".lastFilled")) / 1000;
-
-						if (timeSinceRefill > fillCooldown) {
-							output = changeBlocks(sender);
+					if (cooldown > 0 && lastUse != null && !override) {
+						// Subtract the last use plus the cooldown from the current time to check the diff
+						long remainingTime = (lastUse + cooldown) - System.currentTimeMillis();
+						// If diff doesnt exist then lets change blocks
+						if (remainingTime <= 0) {
+							output = changeBlocks(sender, false);
 						} else {
-							output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOUR + (fillCooldown - timeSinceRefill + 1) + " seconds" + PitAutofill.PREFIX + ".";
+							// Print that things are still on CD using tythan time util
+							output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOUR + TimeUtil.printMillis(remainingTime).toPlainText() + ChatColor.RED + ".";
 						}
 					} else {
-						output = changeBlocks(sender);
+						output = changeBlocks(sender, override);
 					}
 				} else {
 					output = "The pit is still too full. Please use what's currently there.";
@@ -305,24 +273,11 @@ public class ResourcePit {
 			output = "No region specified for that pit.";
 		}
 
-		return output;
-	}
-
-	// Runs the fill command after bypassing the cooldown and refill values in the config.
-	public String fillOverride(CommandSender sender) {
-		int storedCooldown = plugin.getConfig().getInt("pits." + name.toUpperCase() + ".cooldown");
-		int storedRefillValue = plugin.getConfig().getInt("pits." + name + ".refillValue");
-
-		plugin.getConfig().set("pits." + name.toUpperCase() + ".cooldown", 0);
-		plugin.getConfig().set("pits." + name.toUpperCase() + ".refillValue", 100);
-
-		// Moved initialization down, it isn't needed so high up when this value is used once.
-		final String output = fill(sender);
-
-		plugin.getConfig().set("pits." + name.toUpperCase() + ".cooldown", storedCooldown);
-		plugin.getConfig().set("pits." + name.toUpperCase() + ".refillValue", storedRefillValue);
-
-		return output;
+		if (output != null) {
+			sender.sendMessage(ChatColor.DARK_RED + "Error: " + ChatColor.RED + output);
+			return false;
+		}
+		return true;
 	}
 
 	// Returns true if there are any players inside the pit.
@@ -365,8 +320,8 @@ public class ResourcePit {
 	higher than our random value. Once we do, set block location to the previous
 	material we checked.
 	 */
-	private String changeBlocks(CommandSender sender) {
-		String output = "The pit has been refilled.";
+	private String changeBlocks(CommandSender sender, boolean override) {
+		String output = null;
 
 		boolean fillSuccessful = false;
 
@@ -400,8 +355,10 @@ public class ResourcePit {
 
 		// Only want to change the date and log the player once.
 		if (fillSuccessful) {
-			plugin.getConfig().set("pits." + name + ".lastFilled", System.currentTimeMillis());
-			plugin.saveConfig();
+			if (!override) {
+				this.lastUse = System.currentTimeMillis();
+				save();
+			}
 
 			plugin.getLogger().info(name + " pit filled by " + sender.getName() + ".");
 
@@ -462,5 +419,142 @@ public class ResourcePit {
 		}
 
 		return output;
+	}
+
+	/**
+	 * Runs a save task for this specific resource pit
+	 */
+	public void save() {
+		// Queue a task using a Tythan Util
+		Run.as(plugin).async(() -> {
+			plugin.getLogger().info("Saving for pit " + name + " now");
+			// This is an anonymous inner class. All of this code will be run on an entirely new thread!
+			// This is fine as follows because we only GET objects.
+
+			// cooldown = 10; Avoid this
+			// Avoid setting variables in other threads!
+			// This can create an odd situation where someone might set the cooldown to 0 from another thread but this one took a while so even though the latest value is 0 we might overwrite it with 10!
+
+			// Get the config of the plugin
+			FileConfiguration config = plugin.getConfig();
+			// Prep our configuration section, creating a new one if needed as a sanity check. the ternary operator (?) is a fancy "if then" statement on one line.
+			ConfigurationSection section = config.getConfigurationSection("pits." + name);
+			if (section == null) {
+				section = config.createSection("pits." + name);
+			}
+			// Lambdas can't access non-final variables
+			final ConfigurationSection localSection = section;
+			// Sanity null check since java is bad at this
+			plugin.getLogger().info("Section isn't null, saving now." + toString());
+			// Set our values, don't worry if they exist or not as long as we aren't throwing an NPE
+			localSection.set("regionName", region == null ? null : region.getId());
+			localSection.set("worldName", world == null ? null : world.getName());
+			localSection.set("cooldown", cooldown);
+			localSection.set("lastRefill", lastUse);
+			localSection.set("refillValue", refillValue);
+			localSection.set("blockTypes", null);
+			blockTypes.forEach((type, chance) -> localSection.set("blockTypes." + type.name(), chance));
+				/*
+				The above is the same as this
+				for (Material mat : blockTypes.keySet()) {
+					plugin.getConfig().set("pits." + name + ".blockTypes." + mat.toString(), getBlockChance(mat));
+				}
+				 */
+			plugin.getLogger().info("Saving now");
+			config.set("pits." + name, localSection);
+			// Save
+			plugin.getLogger().info("Save full config now for " + name);
+			plugin.saveConfig();
+		});
+		// The above code is the same as this!
+		/* Run.as(plugin).async(new Runnable() {
+			@Override
+			public void run() {
+				// Code
+			}
+		}); */
+	}
+
+	@Override
+	public String toString() {
+		return "ResourcePit{" +
+				"name='" + name + '\'' +
+				", world=" + world +
+				", blockTypes=" + blockTypes +
+				", region=" + region +
+				", refillValue=" + refillValue +
+				", cooldown=" + cooldown +
+				", lastUse=" + lastUse +
+				'}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		ResourcePit that = (ResourcePit) o;
+		return name.equals(that.name) &&
+				Objects.equals(world, that.world) &&
+				Objects.equals(blockTypes, that.blockTypes) &&
+				Objects.equals(region, that.region) &&
+				Objects.equals(refillValue, that.refillValue) &&
+				Objects.equals(cooldown, that.cooldown) &&
+				Objects.equals(lastUse, that.lastUse);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, world, blockTypes, region, refillValue, cooldown, lastUse);
+	}
+
+	public static class Builder {
+		private final String name;
+		private World world;
+		private String[] blockTypes;
+		private ProtectedRegion region;
+		private Integer refillValue;
+		private Long cooldown;
+		private Long lastUse;
+
+		private Builder(String name) {
+			if (name == null) {
+				throw new IllegalArgumentException("Name cannot be null");
+			}
+			this.name = name.toUpperCase();
+		}
+
+		public Builder world(World world) {
+			this.world = world;
+			return this;
+		}
+
+		public Builder blockTypes(String[] blockTypes) {
+			this.blockTypes = blockTypes;
+			return this;
+		}
+
+		public Builder region(ProtectedRegion region) {
+			this.region = region;
+			return this;
+		}
+
+		public Builder refillValue(Integer refillValue) {
+			this.refillValue = refillValue;
+			return this;
+		}
+
+		public Builder cooldown(Long cooldown) {
+			this.cooldown = cooldown;
+			return this;
+		}
+
+		public Builder lastUse(Long lastUse) {
+			this.lastUse = lastUse;
+			return this;
+		}
+
+		public ResourcePit build() {
+			return new ResourcePit(name, world, blockTypes, region, refillValue == null ? PitAutofill.get().defaultRefillValue : refillValue, cooldown == null ? PitAutofill.get().defaultCooldown : cooldown, lastUse);
+		}
 	}
 }

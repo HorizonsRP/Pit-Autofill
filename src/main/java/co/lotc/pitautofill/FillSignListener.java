@@ -38,7 +38,10 @@ public class FillSignListener implements Listener {
 					Sign sign = (Sign) block.getState();
 					if (sign.getLine(1).equalsIgnoreCase(SIGN_IDENTIFIER)) {
 						if (event.getPlayer().hasPermission("pit.use")) {
-							event.getPlayer().sendMessage(PitAutofill.PREFIX + plugin.fillPit(event.getPlayer(), sign.getLine(2).replace(' ', '_')));
+							boolean result = plugin.fillPit(event.getPlayer(), sign.getLine(2).replace(' ', '_'));
+							if (result) {
+								event.getPlayer().sendMessage(PitAutofill.PREFIX + "Successfully filled this pit");
+							}
 						} else {
 							event.getPlayer().sendMessage(PitAutofill.PREFIX + "You cannot refill the pits.");
 						}
