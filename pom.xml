@@ -22,6 +22,8 @@
 
     <build>
         <defaultGoal>clean package</defaultGoal>
+        <!-- We make the final jar be pit-autofill.jar. This IS NOT BEST PRACTICE! But in order for Spigot to update plugins properly they need the same file name. -->
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
