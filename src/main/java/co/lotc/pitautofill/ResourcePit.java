@@ -22,6 +22,7 @@ import java.util.Objects;
 public class ResourcePit {
 
     private static final PitAutofill plugin = PitAutofill.get(); // Stores a reference to our main plugin instance.
+	private ResourcePit child;                                   // The child pit that will be chain-filled after this one.
 	private String name;                                         // The name/ID of the pit.
 	private World world;                                         // Stores the world the region resides in.
 	private HashMap<Material, Integer> blockTypes;               // Stored as block Material, chance Integer
@@ -128,7 +129,12 @@ public class ResourcePit {
 		} else {
 			return "Please specify the blocks and their chances.";
 		}
-		return null;
+		return "Successfully updated the block types and chances.";
+	}
+
+	public String setChildPit(ResourcePit pit) {
+		child = pit;
+		return "Successfully updated child pit.";
 	}
 
 	private HashMap<Material, Integer> convertBlockTypes(String[] blockAndChance) {
@@ -229,11 +235,11 @@ public class ResourcePit {
 
 					if (cooldown > 0 && lastUse != null && !override) {
 						// Subtract the last use plus the cooldown from the current time to check the diff
-						long remainingTime = (lastUse + cooldown) - System.currentTimeMillis();
+						long remainingTime = (lastUse + (cooldown*1000)) - System.currentTimeMillis();
 						if (remainingTime <= 0) {
 							output = changeBlocks(sender, false);
 						} else {
-							output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOUR + TimeUtil.printMillis(remainingTime).toPlainText() + PitAutofill.PREFIX + ".";
+							output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOUR + ((remainingTime/1000) + 1) + " seconds" + PitAutofill.PREFIX + ".";
 						}
 					} else {
 						output = changeBlocks(sender, override);
@@ -330,6 +336,8 @@ public class ResourcePit {
 
 		// Only want to change the date and log the player once.
 		if (fillSuccessful) {
+			child.fill(sender, override);
+
 			if (!override) {
 				this.lastUse = System.currentTimeMillis();
 				save(name);

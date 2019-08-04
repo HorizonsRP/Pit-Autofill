@@ -136,7 +136,14 @@ public class PitCommand extends BaseCommand {
         validate(cooldown > -1, "Cooldown cannot be negative");
 
         pit.setCooldown(cooldown);
-        msg(PitAutofill.PREFIX + "Cooldown successfully set to " + PitAutofill.ALT_COLOUR + cooldown + " sgit econds" + PitAutofill.PREFIX + ".");
+        msg(PitAutofill.PREFIX + "Cooldown successfully set to " + PitAutofill.ALT_COLOUR + cooldown + " seconds" + PitAutofill.PREFIX + ".");
+	}
+
+
+	@Cmd(value="Sets the given pit's child which will be chain-filled.", permission="pit.edit")
+	public void setchild(@Arg(value = "Parent", description = "The parent pit.") ResourcePit parent,
+						 @Arg(value = "Child", description = "The child pit.") ResourcePit child) {
+		msg(PitAutofill.PREFIX + parent.setChildPit(child));
 	}
 
 
