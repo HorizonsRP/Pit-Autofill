@@ -242,20 +242,19 @@ public class ResourcePit {
 		if (regionIsNotNull()) {
 			if (!playersAreInside()) {
 
-				float airCount = 0;
+				float emptyCount = 0;
 				float totalCount = 0;
 				for (Location loc : getLocationList()) {
-					Material mat = world.getBlockAt(loc).getType();
 
-					if ((mat.equals(Material.AIR)) ||
-						(plugin.ignoreWater && mat.equals(Material.WATER)) ||
-						(plugin.ignoreLava && mat.equals(Material.LAVA)) ) {
-						airCount++;
+					Material existingMat = world.getBlockAt(loc).getType();
+					// If our existing material matches ANY ignored material, we count it as empty.
+					if (plugin.getConfig().getStringList("ignored-materials").stream().anyMatch(key -> Material.matchMaterial(key).equals(existingMat))) {
+						emptyCount++;
 					}
 					totalCount++;
 				}
 
-				if (override || ((1f - (airCount / totalCount)) <= ((float) refillValue) / 100f)) {
+				if (override || ((1f - (emptyCount / totalCount)) <= ((float) refillValue) / 100f)) {
 					removeLocks();
 
 					if (cooldown > 0 && lastUse != null && !override) {
