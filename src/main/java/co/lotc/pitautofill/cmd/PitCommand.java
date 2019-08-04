@@ -147,6 +147,12 @@ public class PitCommand extends BaseCommand {
 	}
 
 
+	@Cmd(value="Removes the child pit from the given pit.", permission="pit.edit")
+	public void removechild(ResourcePit pit) {
+		msg(PitAutofill.PREFIX + pit.setChildPit(null));
+	}
+
+
 	// /pit fill -o overrides the cooldown & fill %
 	@Cmd(value="Refills the given pit.", permission="pit.use")
     @Flag(name = "o", description = "Refills the pit regardless of cooldown or saturation.", permission = "pit.edit")

@@ -32,6 +32,8 @@ public class PitAutofill extends JavaPlugin {
     int defaultCooldown;    // Default values for pit settings if unspecified.
     int defaultRefillValue;
     int defaultChanceValue;
+    boolean ignoreWater;
+    boolean ignoreLava;
     private ArrayList<ResourcePit> allPitsList = new ArrayList<>(); // List of our currently loaded pits.
 
     @Override
@@ -45,6 +47,8 @@ public class PitAutofill extends JavaPlugin {
         this.defaultCooldown = getConfig().getInt("default-cooldown-value");
         this.defaultRefillValue = getConfig().getInt("default-refill-value");
         this.defaultChanceValue = getConfig().getInt("default-chance-value");
+        this.ignoreWater = getConfig().getBoolean("ignore-water");
+        this.ignoreLava = getConfig().getBoolean("ignore-laval");
 
         init();
 

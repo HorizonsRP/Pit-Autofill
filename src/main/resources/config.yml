@@ -2,4 +2,6 @@
 default-refill-value: 30
 default-chance-value: 100
 default-cooldown-value: 0
+ignore-water: true
+ignore-lava: false
 pits:

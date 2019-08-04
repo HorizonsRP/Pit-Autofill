@@ -225,9 +225,14 @@ public class ResourcePit {
 				float airCount = 0;
 				float totalCount = 0;
 				for (Location loc : getLocationList()) {
-					if (world.getBlockAt(loc).getType().equals(Material.AIR))
-						airCount += 1f;
-					totalCount += 1f;
+					Material mat = world.getBlockAt(loc).getType();
+
+					if ((mat.equals(Material.AIR)) ||
+						(plugin.ignoreWater && mat.equals(Material.WATER)) ||
+						(plugin.ignoreLava && mat.equals(Material.LAVA)) ) {
+						airCount++;
+					}
+					totalCount++;
 				}
 
 				if (override || ((1f - (airCount / totalCount)) <= ((float) refillValue) / 100f)) {
@@ -336,7 +341,9 @@ public class ResourcePit {
 
 		// Only want to change the date and log the player once.
 		if (fillSuccessful) {
-			child.fill(sender, override);
+			if (child != null) {
+				child.fill(sender, true);
+			}
 
 			if (!override) {
 				this.lastUse = System.currentTimeMillis();
