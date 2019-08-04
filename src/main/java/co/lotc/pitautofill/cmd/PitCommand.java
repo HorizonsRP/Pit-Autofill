@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 public class PitCommand extends BaseCommand {
 
-	@Cmd(value="Creates a new pit with given [name] {WorldGuard Region}", permission="pit.create")
+	@Cmd(value="Creates a new pit with given [Name] [Region] {Blocks}", permission="pit.create")
     @Flag(name = "world", description = "Specifies a specific world for this pit", type = World.class)
 	public void create(CommandSender sender,
                        @Arg(value = "Pit_Name", description = "The name of the pit in question.") String name,
@@ -40,8 +40,10 @@ public class PitCommand extends BaseCommand {
         ProtectedRegion region = plugin.getRegion(regionName, world);
         validate(region != null, "Region " + regionName + " not found, please specify another");
 
-        // Make sure there aren't any other pits using this region
-        validate(plugin.getPits().stream().noneMatch(pit -> pit.getRegion() == region && pit.getRegionWorld() == world), "Another pit already uses this region");
+        // Warns the user that more than one pit are using this region. Does not throw an error as this may be a user choice.
+        if (plugin.getPits().stream().anyMatch(pit -> pit.getRegion() == region && pit.getRegionWorld() == world)) {
+        	msg(PitAutofill.PREFIX + "CAUTION:" + PitAutofill.ALT_COLOUR + " Multiple pits now share that region.");
+		}
 
         // Build a pit with a region.
         ResourcePit pit = ResourcePit.builder(name)
@@ -54,7 +56,7 @@ public class PitCommand extends BaseCommand {
 
         // Register and save the pit
         plugin.addPit(pit);
-        pit.save();
+        pit.save(pit.getName());
         msg(PitAutofill.PREFIX + "Successfully created the pit with the name " + name);
 	}
 
@@ -98,7 +100,7 @@ public class PitCommand extends BaseCommand {
     public void setname(ResourcePit pit,
                         @Arg(value = "New_Name", description = "The new name you wish to assign the pit.") String newName) {
 
-        msg(PitAutofill.PREFIX + pit.setName(newName));
+        msg(PitAutofill.PREFIX + pit.setName(newName.toUpperCase()));
 	}
 
 
@@ -119,7 +121,7 @@ public class PitCommand extends BaseCommand {
 
 	@Cmd(value="Set the max percentage a pit can be filled when refilling.", permission="pit.edit")
     public void setrefillvalue(ResourcePit pit,
-                               @Arg(value = "Refill Value", description = "An number between 0 and 100 that represents the max saturation a pit can have when refilling.")
+                               @Arg(value = "Refill Value", description = "A number between 0 and 100 that represents the max saturation a pit can have when refilling.")
                                @Range(min = 0, max = 100) int value) {
 
         pit.setRefillValue(value);
@@ -129,13 +131,12 @@ public class PitCommand extends BaseCommand {
 
 	@Cmd(value="Sets the given pit's cooldown in seconds.", permission="pit.edit")
     public void setcooldown(ResourcePit pit,
-                            @Arg(value = "cooldown", description = "The number of seconds that must pass before one can refill a pit again.") Instant time) {
+                            @Arg(value = "Cooldown", description = "The number of seconds that must pass before one can refill a pit again.") int cooldown) {
 
-        long cooldown = System.currentTimeMillis() - time.toEpochMilli();
         validate(cooldown > -1, "Cooldown cannot be negative");
 
         pit.setCooldown(cooldown);
-        msg(PitAutofill.PREFIX + "Cooldown successfully set to " + PitAutofill.ALT_COLOUR + TimeUtil.printMillis(cooldown).toPlainText() + PitAutofill.PREFIX + ".");
+        msg(PitAutofill.PREFIX + "Cooldown successfully set to " + PitAutofill.ALT_COLOUR + cooldown + " sgit econds" + PitAutofill.PREFIX + ".");
 	}
 
 
@@ -150,7 +151,7 @@ public class PitCommand extends BaseCommand {
 
 	@Cmd(value="Provides a list of saved pits.", permission="pit.info")
     public void list() {
-        msg(PitAutofill.PREFIX + "Pits: " + plugin.getPits().stream().map(ResourcePit::getName).collect(Collectors.joining(", ")));
+        msg(PitAutofill.PREFIX + "Pits: " + PitAutofill.ALT_COLOUR + plugin.getPits().stream().map(ResourcePit::getName).collect(Collectors.joining(", ")));
 	}
 
 

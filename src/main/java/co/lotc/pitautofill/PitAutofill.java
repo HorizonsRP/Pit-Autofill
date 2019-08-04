@@ -29,7 +29,7 @@ public class PitAutofill extends JavaPlugin {
         return instance;
     }
 
-    long defaultCooldown;    // Default values for pit settings if unspecified.
+    int defaultCooldown;    // Default values for pit settings if unspecified.
     int defaultRefillValue;
     int defaultChanceValue;
     private ArrayList<ResourcePit> allPitsList = new ArrayList<>(); // List of our currently loaded pits.
@@ -42,7 +42,7 @@ public class PitAutofill extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        this.defaultCooldown = getConfig().getLong("default-cooldown-value");
+        this.defaultCooldown = getConfig().getInt("default-cooldown-value");
         this.defaultRefillValue = getConfig().getInt("default-refill-value");
         this.defaultChanceValue = getConfig().getInt("default-chance-value");
 
@@ -107,7 +107,7 @@ public class PitAutofill extends JavaPlugin {
             // Load basic values
             String regionName = pitNameSection.getString("regionName");
             String worldName = pitNameSection.getString("worldName");
-            long cooldown = pitNameSection.getLong("cooldown");
+            int cooldown = pitNameSection.getInt("cooldown");
             long lastRefill = pitNameSection.getLong("lastRefill");
             int refillValue = pitNameSection.getInt("refillValue");
 
