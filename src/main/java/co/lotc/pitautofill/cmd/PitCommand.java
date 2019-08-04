@@ -51,8 +51,7 @@ public class PitCommand extends BaseCommand {
 									 .region(region)
 									 .build();
 
-        String output = pit.setBlockTypes(blocks);
-        validate(output == null, output);
+        pit.setBlockTypes(blocks);
 
         // Register and save the pit
         plugin.addPit(pit);
@@ -198,6 +197,10 @@ public class PitCommand extends BaseCommand {
             message += (PitAutofill.PREFIX + "\nRegion Name: " + PitAutofill.ALT_COLOUR + thisPit.getRegion().getId() +
 						PitAutofill.PREFIX + "\nWorld: " + PitAutofill.ALT_COLOUR + thisPit.getRegionWorld().getName());
         }
+
+		if (thisPit.getChild() != null) {
+			message += PitAutofill.PREFIX + "\nChild: " + PitAutofill.ALT_COLOUR + thisPit.getChild().getName();
+		}
 
         msg(message);
 	}
