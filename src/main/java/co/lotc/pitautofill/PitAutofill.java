@@ -99,6 +99,7 @@ public class PitAutofill extends JavaPlugin {
         if (config.getConfigurationSection("pits") == null)
             config.createSection("pits");
 
+        // Creates all saved pits.
         for (String pitName : config.getConfigurationSection("pits").getKeys(false)) {
 
             // Grab the config section that represents this pit. If null break this iteration.
@@ -156,6 +157,14 @@ public class PitAutofill extends JavaPlugin {
 
             // Register the pit
             this.addPit(pit);
+        }
+
+        // Sets children after all pits have been created.
+        for (String pitName : config.getConfigurationSection("pits").getKeys(false)) {
+            String childPit = config.getString("pits." + pitName + ".childPit");
+            if (childPit != null) {
+                getPit(pitName).setChildPit(getPit(childPit));
+            }
         }
 
     }

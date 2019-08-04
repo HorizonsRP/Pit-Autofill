@@ -71,6 +71,10 @@ public class ResourcePit {
 		return world;
 	}
 
+	public ResourcePit getChild() {
+		return child;
+	}
+
 	//// MODIFIERS ////
 
 	// Sets the pit's refill value as a non-decimal percent value.
@@ -132,9 +136,29 @@ public class ResourcePit {
 		return "Successfully updated the block types and chances.";
 	}
 
-	public String setChildPit(ResourcePit pit) {
-		child = pit;
-		return "Successfully updated child pit.";
+	public String setChildPit(ResourcePit newChild) {
+		String output = "Successfully updated child pit.";
+
+		boolean childLoop = false;
+		for(ResourcePit thisPit = newChild; thisPit != null; thisPit = thisPit.getChild()) {
+			if (thisPit.equals(this)) {
+				childLoop = true;
+				break;
+			}
+		}
+
+		if (!childLoop) {
+			if (newChild != null) {
+				child = newChild;
+				save(name);
+			} else {
+				output = "Fatal Error: newChild Parameter was null.";
+			}
+		} else {
+			output = "Setting that pit as a child would cause an endless loop.";
+		}
+
+		return output;
 	}
 
 	private HashMap<Material, Integer> convertBlockTypes(String[] blockAndChance) {
@@ -430,6 +454,7 @@ public class ResourcePit {
 			// Set our values, don't worry if they exist or not as long as we aren't throwing an NPE
 			localSection.set("regionName", region == null ? null : region.getId());
 			localSection.set("worldName", world == null ? null : world.getName());
+			localSection.set("childPit", child == null ? null : child.getName());
 			localSection.set("cooldown", cooldown);
 			localSection.set("lastRefill", lastUse);
 			localSection.set("refillValue", refillValue);
