@@ -184,7 +184,6 @@ public class PitCommand extends BaseCommand {
 
         String message = (PitAutofill.ALT_COLOUR + ChatColor.BOLD + "Pit '" + thisPit.getName().toUpperCase() + "'" +
 						  PitAutofill.PREFIX + "\nBlock Types: " + PitAutofill.ALT_COLOUR + typeList +
-						  PitAutofill.PREFIX + "\nHas Region: " + PitAutofill.ALT_COLOUR + WordUtils.capitalize(thisPit.regionIsNotNull() + "") +
 						  PitAutofill.PREFIX + "\nMin for Refill: " + PitAutofill.ALT_COLOUR + thisPit.getRefillValue() + "%");
 
         if (thisPit.getCooldown() <= 0) {

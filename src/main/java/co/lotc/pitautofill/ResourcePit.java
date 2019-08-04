@@ -148,12 +148,8 @@ public class ResourcePit {
 		}
 
 		if (!childLoop) {
-			if (newChild != null) {
-				child = newChild;
-				save(name);
-			} else {
-				output = "Fatal Error: newChild Parameter was null.";
-			}
+			child = newChild;
+			save(name);
 		} else {
 			output = "Setting that pit as a child would cause an endless loop.";
 		}
