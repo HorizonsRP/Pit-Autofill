@@ -4,7 +4,6 @@ import co.lotc.core.command.annotate.Arg;
 import co.lotc.core.command.annotate.Cmd;
 import co.lotc.core.command.annotate.Flag;
 import co.lotc.core.command.annotate.Range;
-import co.lotc.core.util.TimeUtil;
 import co.lotc.pitautofill.BaseCommand;
 import co.lotc.pitautofill.PitAutofill;
 import co.lotc.pitautofill.ResourcePit;
@@ -12,14 +11,12 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.time.Instant;
 import java.util.stream.Collectors;
 
 public class PitCommand extends BaseCommand {
@@ -46,7 +43,7 @@ public class PitCommand extends BaseCommand {
 		}
 
         // Build a pit with a region.
-        ResourcePit pit = ResourcePit.builder(name)
+        ResourcePit pit = ResourcePit.builder(name, plugin.getPitFile(name))
 									 .world(world)
 									 .region(region)
 									 .build();
@@ -55,7 +52,7 @@ public class PitCommand extends BaseCommand {
 
         // Register and save the pit
         plugin.addPit(pit);
-        pit.save(pit.getName());
+        pit.save();
         msg(PitAutofill.PREFIX + "Successfully created the pit with the name " + name);
 	}
 
@@ -94,21 +91,11 @@ public class PitCommand extends BaseCommand {
 
 	}
 
-
-	@Cmd(value="Change the given pit's name.", permission="pit.edit")
-    public void setname(ResourcePit pit,
-                        @Arg(value = "New_Name", description = "The new name you wish to assign the pit.") String newName) {
-
-        msg(PitAutofill.PREFIX + pit.setName(newName.toUpperCase()));
-	}
-
-
 	@Cmd(value="Premanently deletes a given pit.", permission="pit.edit")
     public void delete(ResourcePit pit) {
 
         msg(PitAutofill.PREFIX + plugin.deletePit(pit));
 	}
-
 
 	@Cmd(value="Set the given pit's block types by Block:##.", permission="pit.edit")
     public void setblocks(ResourcePit pit,
@@ -116,7 +103,6 @@ public class PitCommand extends BaseCommand {
 
         msg(PitAutofill.PREFIX + pit.setBlockTypes(blocks));
 	}
-
 
 	@Cmd(value="Set the max percentage a pit can be filled when refilling.", permission="pit.edit")
     public void setrefillvalue(ResourcePit pit,
@@ -203,5 +189,11 @@ public class PitCommand extends BaseCommand {
 
         msg(message);
 	}
+
+    @Cmd(value = "reloads the configuration file for pits", permission = "pit.edit")
+    public void reload() {
+        plugin.init();
+        msg("Reloaded the configuration file for pits");
+    }
 
 }

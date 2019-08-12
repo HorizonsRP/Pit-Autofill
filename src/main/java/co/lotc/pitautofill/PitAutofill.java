@@ -3,6 +3,7 @@ package co.lotc.pitautofill;
 import co.lotc.core.bukkit.command.Commands;
 import co.lotc.core.bukkit.util.Run;
 import co.lotc.pitautofill.cmd.PitCommand;
+import com.google.common.collect.Lists;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -11,12 +12,11 @@ import net.lordofthecraft.omniscience.api.OmniApi;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
-import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class PitAutofill extends JavaPlugin {
@@ -88,79 +88,27 @@ public class PitAutofill extends JavaPlugin {
     //// STARTUP ////
 
     // Iterate through our list of pits, pre-loading all specified info from the config.
-    private void init() {
+    public void init() {
+        allPitsList = new ArrayList<>();
 
-        FileConfiguration config = getConfig();
+        File pitDir = new File(getDataFolder(), "pits");
+        if (!pitDir.exists()) {
+            pitDir.mkdirs();
+        }
 
-        if (config.getConfigurationSection("pits") == null)
-            config.createSection("pits");
+        File[] files = pitDir.listFiles(pathname -> pathname.getName().endsWith(".yml"));
 
-        // Creates all saved pits.
-        for (String pitName : config.getConfigurationSection("pits").getKeys(false)) {
+        List<String> children = Lists.newArrayList();
 
-            // Grab the config section that represents this pit. If null break this iteration.
-            ConfigurationSection pitNameSection = config.getConfigurationSection("pits." + pitName);
-            if (pitNameSection == null) {
-                getLogger().warning("Section was null for the pit " + pitName);
-                continue;
-            }
-
-            // Load basic values
-            String regionName = pitNameSection.getString("regionName");
-            String worldName = pitNameSection.getString("worldName");
-            int cooldown = pitNameSection.getInt("cooldown");
-            long lastRefill = pitNameSection.getLong("lastRefill");
-            int refillValue = pitNameSection.getInt("refillValue");
-
-            // Grab a string list of the 'block:chance'
-            ArrayList<String> blockTypes = new ArrayList<>();
-            ConfigurationSection blockTypeSection = pitNameSection.getConfigurationSection("blockTypes");
-            if (blockTypeSection != null) {
-                for (String block : blockTypeSection.getKeys(false)) {
-                    blockTypes.add(block + ":" + blockTypeSection.getInt(block));
-                }
-            } else {
-                getLogger().warning("Block type was null for pit " + pitName);
-            }
-
-            // Validate we haven't loaded this pit yet
+        for (File file : files) {
+            String pitName = file.getName().replaceAll("\\.yml", "");
             if (allPitsList.stream().anyMatch(pit -> pit.getName().equalsIgnoreCase(pitName))) {
                 getLogger().severe("A duplicate pit with the name " + pitName + " was already found");
                 continue;
             }
-
-            // Convert ArrayList to String[]
-            String[] stringedBlockTypes = new String[blockTypes.size()];
-            if (blockTypes.size() > 0) {
-                for (int i = 0; i < stringedBlockTypes.length; i++) {
-                    stringedBlockTypes[i] = blockTypes.get(i);
-                }
-            }
-
-            // Go ahead and parse world/region
-            World world = worldName != null ? Bukkit.getWorld(worldName) : null;
-            ProtectedRegion region = getRegion(regionName, world);
-
-            // Create a new pit using our parsed values
-            ResourcePit pit = ResourcePit.builder(pitName)
-                                         .cooldown(cooldown)
-                                         .refillValue(refillValue)
-                                         .lastUse(lastRefill)
-                                         .blockTypes(stringedBlockTypes)
-                                         .world(world)
-                                         .region(region)
-                                         .build();
-
-            // Register the pit
-            this.addPit(pit);
-        }
-
-        // Sets children after all pits have been created.
-        for (String pitName : config.getConfigurationSection("pits").getKeys(false)) {
-            String childPit = config.getString("pits." + pitName + ".childPit");
-            if (childPit != null) {
-                getPit(pitName).setChildPit(getPit(childPit));
-            }
+            ResourcePit pit =
+                    ResourcePit.fromFile(pitName, file);
+            allPitsList.add(pit);
         }
 
     }
@@ -190,10 +138,7 @@ public class PitAutofill extends JavaPlugin {
         if (thisPit != null) {
             allPitsList.remove(thisPit);
 
-            Run.as(this).async(() -> {
-                this.getConfig().set("pits." + thisPit.getName().toUpperCase(), null);
-                PitAutofill.get().saveConfig();
-            });
+            Run.as(this).async(thisPit::delete);
 
             output = "Successfully deleted the pit '" + PitAutofill.ALT_COLOUR + thisPit.getName().toUpperCase() + PitAutofill.PREFIX + "'.";
         }
@@ -202,7 +147,9 @@ public class PitAutofill extends JavaPlugin {
 
     // Returns the ResourcePit with the matching name.
     public ResourcePit getPit(String name) {
-
+        if (name == null) {
+            return null;
+        }
         for (ResourcePit thisPit : allPitsList) {
             if (thisPit.getName().equalsIgnoreCase(name.toUpperCase()))
                 return thisPit;
@@ -221,11 +168,8 @@ public class PitAutofill extends JavaPlugin {
         return manager.getRegion(id);
     }
 
-    //// PRIVATE ////
-
-    // Returns the pit not found error message.
-    private String noPitFoundMsg(String name) {
-        return "No pit found with the name '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
+    public File getPitFile(String pitName) {
+        return new File(new File(getDataFolder(), "pits"), pitName.toUpperCase() + ".yml");
     }
 
 }
