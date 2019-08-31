@@ -1,7 +1,7 @@
 name: 'Pit-Autofill'
 version: ${project.version}
 main: co.lotc.pitautofill.PitAutofill
-api-version: '1.13'
+api-version: '1.14'
 authors: [Korvic]
 description: A light plugin made to automate the filling of the resource pits at the Cloud Temple on Lord of the Craft.
 depend: [Tythan, WorldEdit, WorldGuard]
