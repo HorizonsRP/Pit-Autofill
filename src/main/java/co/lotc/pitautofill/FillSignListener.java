@@ -31,8 +31,18 @@ public class FillSignListener implements Listener {
 
 				// RClick && Either Sign Type
 				if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) &&
-					(block.getType().equals(Material.WALL_SIGN) ||
-					 block.getType().equals(Material.SIGN))) {
+					(block.getBlockData().getMaterial().equals(Material.SPRUCE_SIGN) ||
+					 block.getBlockData().getMaterial().equals(Material.SPRUCE_WALL_SIGN) ||
+					 block.getBlockData().getMaterial().equals(Material.ACACIA_SIGN) ||
+					 block.getBlockData().getMaterial().equals(Material.ACACIA_WALL_SIGN) ||
+					 block.getBlockData().getMaterial().equals(Material.BIRCH_SIGN) ||
+					 block.getBlockData().getMaterial().equals(Material.BIRCH_WALL_SIGN) ||
+					 block.getBlockData().getMaterial().equals(Material.OAK_SIGN) ||
+					 block.getBlockData().getMaterial().equals(Material.OAK_WALL_SIGN) ||
+					 block.getBlockData().getMaterial().equals(Material.DARK_OAK_SIGN) ||
+					 block.getBlockData().getMaterial().equals(Material.DARK_OAK_WALL_SIGN) ||
+					 block.getBlockData().getMaterial().equals(Material.JUNGLE_SIGN) ||
+					 block.getBlockData().getMaterial().equals(Material.JUNGLE_WALL_SIGN) )) {
 
 					Sign sign = (Sign) block.getState();
 					if (sign.getLine(1).equalsIgnoreCase(SIGN_IDENTIFIER)) {
