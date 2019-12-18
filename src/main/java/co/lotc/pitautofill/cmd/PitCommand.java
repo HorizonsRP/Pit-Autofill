@@ -39,7 +39,7 @@ public class PitCommand extends BaseCommand {
 
         // Warns the user that more than one pit are using this region. Does not throw an error as this may be a user choice.
         if (plugin.getPits().stream().anyMatch(pit -> pit.getRegion() == region && pit.getRegionWorld() == world)) {
-        	msg(PitAutofill.PREFIX + "CAUTION:" + PitAutofill.ALT_COLOUR + " Multiple pits now share that region.");
+        	msg(PitAutofill.PREFIX + "CAUTION:" + PitAutofill.ALT_COLOR + " Multiple pits now share that region.");
 		}
 
         // Build a pit with a region.
@@ -86,8 +86,8 @@ public class PitCommand extends BaseCommand {
 
         // Set the pit's region and let the sender know.
         pit.setRegion(region, world);
-        msg(PitAutofill.PREFIX + "The pit '" + PitAutofill.ALT_COLOUR + pit.getName().toUpperCase() + PitAutofill.PREFIX + "' has been assigned the region '" +
-                PitAutofill.ALT_COLOUR + regionName.toUpperCase() + PitAutofill.PREFIX + "'.");
+        msg(PitAutofill.PREFIX + "The pit '" + PitAutofill.ALT_COLOR + pit.getName().toUpperCase() + PitAutofill.PREFIX + "' has been assigned the region '" +
+			PitAutofill.ALT_COLOR + regionName.toUpperCase() + PitAutofill.PREFIX + "'.");
 
 	}
 
@@ -110,7 +110,7 @@ public class PitCommand extends BaseCommand {
                                @Range(min = 0, max = 100) int value) {
 
         pit.setRefillValue(value);
-        msg(PitAutofill.PREFIX + "Set the pit " + pit.getName() + "'s refill value to " + PitAutofill.ALT_COLOUR + value + PitAutofill.PREFIX + ".");
+        msg(PitAutofill.PREFIX + "Set the pit " + pit.getName() + "'s refill value to " + PitAutofill.ALT_COLOR + value + PitAutofill.PREFIX + ".");
 	}
 
 
@@ -121,7 +121,7 @@ public class PitCommand extends BaseCommand {
         validate(cooldown > -1, "Cooldown cannot be negative");
 
         pit.setCooldown(cooldown);
-        msg(PitAutofill.PREFIX + "Cooldown successfully set to " + PitAutofill.ALT_COLOUR + cooldown + " seconds" + PitAutofill.PREFIX + ".");
+        msg(PitAutofill.PREFIX + "Cooldown successfully set to " + PitAutofill.ALT_COLOR + cooldown + " seconds" + PitAutofill.PREFIX + ".");
 	}
 
 
@@ -142,14 +142,13 @@ public class PitCommand extends BaseCommand {
 	@Cmd(value="Refills the given pit.", permission="pit.use")
     @Flag(name = "o", description = "Refills the pit regardless of cooldown or saturation.", permission = "pit.edit")
     public void fill(CommandSender sender, ResourcePit pit) {
-        String result = pit.fill(sender, hasFlag("o"));
-        msg(PitAutofill.PREFIX + result);
+        pit.fill(sender, hasFlag("o"));
 	}
 
 
 	@Cmd(value="Provides a list of saved pits.", permission="pit.info")
     public void list() {
-        msg(PitAutofill.PREFIX + "Pits: " + PitAutofill.ALT_COLOUR + plugin.getPits().stream().map(ResourcePit::getName).collect(Collectors.joining(", ")));
+        msg(PitAutofill.PREFIX + "Pits: " + PitAutofill.ALT_COLOR + plugin.getPits().stream().map(ResourcePit::getName).collect(Collectors.joining(", ")));
 	}
 
 
@@ -168,23 +167,23 @@ public class PitCommand extends BaseCommand {
             }
         }
 
-        String message = (PitAutofill.ALT_COLOUR + ChatColor.BOLD + "Pit '" + thisPit.getName().toUpperCase() + "'" +
-						  PitAutofill.PREFIX + "\nBlock Types: " + PitAutofill.ALT_COLOUR + typeList +
-						  PitAutofill.PREFIX + "\nMin for Refill: " + PitAutofill.ALT_COLOUR + thisPit.getRefillValue() + "%");
+        String message = (PitAutofill.ALT_COLOR + ChatColor.BOLD + "Pit '" + thisPit.getName().toUpperCase() + "'" +
+						  PitAutofill.PREFIX + "\nBlock Types: " + PitAutofill.ALT_COLOR + typeList +
+						  PitAutofill.PREFIX + "\nMin for Refill: " + PitAutofill.ALT_COLOR + thisPit.getRefillValue() + "%");
 
         if (thisPit.getCooldown() <= 0) {
-            message += PitAutofill.PREFIX + "\nCooldown: " + PitAutofill.ALT_COLOUR + "None";
+            message += PitAutofill.PREFIX + "\nCooldown: " + PitAutofill.ALT_COLOR + "None";
         } else {
-            message += PitAutofill.PREFIX + "\nCooldown: " + PitAutofill.ALT_COLOUR + thisPit.getCooldown() + " seconds";
+            message += PitAutofill.PREFIX + "\nCooldown: " + PitAutofill.ALT_COLOR + thisPit.getCooldown() + " seconds";
         }
 
         if (thisPit.regionIsNotNull()) {
-            message += (PitAutofill.PREFIX + "\nRegion Name: " + PitAutofill.ALT_COLOUR + thisPit.getRegion().getId() +
-						PitAutofill.PREFIX + "\nWorld: " + PitAutofill.ALT_COLOUR + thisPit.getRegionWorld().getName());
+            message += (PitAutofill.PREFIX + "\nRegion Name: " + PitAutofill.ALT_COLOR + thisPit.getRegion().getId() +
+						PitAutofill.PREFIX + "\nWorld: " + PitAutofill.ALT_COLOR + thisPit.getRegionWorld().getName());
         }
 
 		if (thisPit.getChild() != null) {
-			message += PitAutofill.PREFIX + "\nChild: " + PitAutofill.ALT_COLOUR + thisPit.getChild().getName();
+			message += PitAutofill.PREFIX + "\nChild: " + PitAutofill.ALT_COLOR + thisPit.getChild().getName();
 		}
 
         msg(message);

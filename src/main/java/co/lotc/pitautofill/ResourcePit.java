@@ -20,6 +20,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -290,54 +291,61 @@ public class ResourcePit {
 	So long as there're no players in the pit, fill it. If there are
 	players, return a message to the sender as such.
 	 */
-	public String fill(CommandSender sender, boolean override) {
+	public void fill(CommandSender sender, boolean override) {
 
-		final String output;
+		BukkitRunnable refill = new BukkitRunnable() {
+			@Override
+			public void run() {
+				final String output;
 
-		if (regionIsNotNull()) {
-			if (!playersAreInside()) {
+				if (regionIsNotNull()) {
+					if (!playersAreInside()) {
 
-				float emptyCount = 0;
-				float totalCount = 0;
-				for (Location loc : getLocationList()) {
+						float emptyCount = 0;
+						float totalCount = 0;
+						for (Location loc : getLocationList()) {
 
-					Material existingMat = world.getBlockAt(loc).getType();
-					// If our existing material matches ANY ignored material, we count it as empty.
-					if (plugin.getConfig().getStringList("ignored-materials").stream().anyMatch(key -> Material.matchMaterial(key).equals(existingMat))) {
-						emptyCount++;
-					}
-					totalCount++;
-				}
+							Material existingMat = world.getBlockAt(loc).getType();
+							// If our existing material matches ANY ignored material, we count it as empty.
+							if (plugin.getConfig().getStringList("ignored-materials").stream().anyMatch(key -> Material.matchMaterial(key).equals(existingMat))) {
+								emptyCount++;
+							}
+							totalCount++;
+						}
 
-				if (override || ((1f - (emptyCount / totalCount)) <= ((float) refillValue) / 100f)) {
-					removeLocks();
+						if (override || ((1f - (emptyCount / totalCount)) <= ((float) refillValue) / 100f)) {
+							removeLocks();
 
-					if (cooldown > 0 && lastUse != null && !override) {
-						// Subtract the last use plus the cooldown from the current time to check the diff
-						long remainingTime = (lastUse + (cooldown*1000)) - System.currentTimeMillis();
-						if (remainingTime <= 0) {
-							output = changeBlocks(sender, false);
+							if (cooldown > 0 && lastUse != null && !override) {
+								// Subtract the last use plus the cooldown from the current time to check the diff
+								long remainingTime = (lastUse + (cooldown*1000)) - System.currentTimeMillis();
+								if (remainingTime <= 0) {
+									output = changeBlocks(sender, false);
+								} else {
+									output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOR + ((remainingTime / 1000) + 1) + " seconds" + PitAutofill.PREFIX + ".";
+								}
+							} else {
+								output = changeBlocks(sender, override);
+							}
 						} else {
-							output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOUR + ((remainingTime/1000) + 1) + " seconds" + PitAutofill.PREFIX + ".";
+							output = "The pit is still too full. Please use what's currently there.";
 						}
 					} else {
-						output = changeBlocks(sender, override);
+						output = "There are still players inside the pit.";
 					}
 				} else {
-					output = "The pit is still too full. Please use what's currently there.";
+					output = "No region specified for that pit.";
 				}
-			} else {
-				output = "There are still players inside the pit.";
-			}
-		} else {
-			output = "No region specified for that pit.";
-		}
 
-		if (output != null) {
-			return output;
-		} else {
-			return "Successfully filled the pit '" + PitAutofill.ALT_COLOUR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
-		}
+				if (output != null) {
+					sender.sendMessage(output);
+				} else {
+					sender.sendMessage("Successfully filled the pit '" + PitAutofill.ALT_COLOR + name.toUpperCase() + PitAutofill.PREFIX + "'.");
+				}
+			}
+		};
+
+		refill.runTaskAsynchronously(PitAutofill.get());
 	}
 
 	// Returns true if there are any players inside the pit.

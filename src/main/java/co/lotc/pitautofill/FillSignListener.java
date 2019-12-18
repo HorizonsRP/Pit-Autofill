@@ -1,7 +1,6 @@
 package co.lotc.pitautofill;
 
 import org.apache.commons.lang.WordUtils;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.event.EventHandler;
@@ -38,10 +37,9 @@ public class FillSignListener implements Listener {
 							String pitName = sign.getLine(2).replace(' ', '_').toUpperCase();
 							ResourcePit pit = plugin.getPit(pitName);
 							if (pit != null) {
-								String result = pit.fill(event.getPlayer(), false);
-								event.getPlayer().sendMessage(PitAutofill.PREFIX + result);
+								pit.fill(event.getPlayer(), false);
 							} else {
-								event.getPlayer().sendMessage(PitAutofill.PREFIX + "The pit '" + PitAutofill.ALT_COLOUR + pitName + PitAutofill.PREFIX + "' does not exist.");
+								event.getPlayer().sendMessage(PitAutofill.PREFIX + "The pit '" + PitAutofill.ALT_COLOR + pitName + PitAutofill.PREFIX + "' does not exist.");
 							}
 						} else {
 							event.getPlayer().sendMessage(PitAutofill.PREFIX + "You cannot refill the pits.");

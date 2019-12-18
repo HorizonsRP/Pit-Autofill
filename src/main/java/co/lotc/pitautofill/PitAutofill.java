@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class PitAutofill extends JavaPlugin {
 
     public static final String PREFIX = (ChatColor.DARK_GREEN + ""); // The same colouring prefix to be used throughout the plugin.
-    public static final String ALT_COLOUR = (ChatColor.YELLOW + "");
+    public static final String ALT_COLOR = (ChatColor.YELLOW + "");
 
     private static PitAutofill instance; // Keeps a static copy of our current instance and an accessor for it.
     public static PitAutofill get() {
@@ -140,7 +140,7 @@ public class PitAutofill extends JavaPlugin {
 
             Run.as(this).async(thisPit::delete);
 
-            output = "Successfully deleted the pit '" + PitAutofill.ALT_COLOUR + thisPit.getName().toUpperCase() + PitAutofill.PREFIX + "'.";
+            output = "Successfully deleted the pit '" + PitAutofill.ALT_COLOR + thisPit.getName().toUpperCase() + PitAutofill.PREFIX + "'.";
         }
         return output;
     }
