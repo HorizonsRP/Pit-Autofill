@@ -338,9 +338,9 @@ public class ResourcePit {
 				}
 
 				if (output != null) {
-					sender.sendMessage(output);
+					sender.sendMessage(PitAutofill.PREFIX + output);
 				} else {
-					sender.sendMessage("Successfully filled the pit '" + PitAutofill.ALT_COLOR + name.toUpperCase() + PitAutofill.PREFIX + "'.");
+					sender.sendMessage(PitAutofill.PREFIX + "Successfully filled the pit '" + PitAutofill.ALT_COLOR + name.toUpperCase() + PitAutofill.PREFIX + "'.");
 				}
 			}
 		};
