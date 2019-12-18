@@ -293,6 +293,7 @@ public class ResourcePit {
 	 */
 	public void fill(CommandSender sender, boolean override) {
 
+		ResourcePit pit = this;
 		BukkitRunnable refill = new BukkitRunnable() {
 			@Override
 			public void run() {
@@ -307,25 +308,25 @@ public class ResourcePit {
 
 							Material existingMat = world.getBlockAt(loc).getType();
 							// If our existing material matches ANY ignored material, we count it as empty.
-							if (plugin.getConfig().getStringList("ignored-materials").stream().anyMatch(key -> Material.matchMaterial(key).equals(existingMat))) {
+							if (ResourcePit.plugin.getConfig().getStringList("ignored-materials").stream().anyMatch(key -> Material.matchMaterial(key).equals(existingMat))) {
 								emptyCount++;
 							}
 							totalCount++;
 						}
 
 						if (override || ((1f - (emptyCount / totalCount)) <= ((float) refillValue) / 100f)) {
-							removeLocks();
+							pit.removeLocks();
 
-							if (cooldown > 0 && lastUse != null && !override) {
+							if (pit.cooldown > 0 && pit.lastUse != null && !override) {
 								// Subtract the last use plus the cooldown from the current time to check the diff
-								long remainingTime = (lastUse + (cooldown*1000)) - System.currentTimeMillis();
+								long remainingTime = (pit.lastUse + (pit.cooldown*1000)) - System.currentTimeMillis();
 								if (remainingTime <= 0) {
-									output = changeBlocks(sender, false);
+									output = pit.changeBlocks(sender, false);
 								} else {
 									output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOR + ((remainingTime / 1000) + 1) + " seconds" + PitAutofill.PREFIX + ".";
 								}
 							} else {
-								output = changeBlocks(sender, override);
+								output = pit.changeBlocks(sender, override);
 							}
 						} else {
 							output = "The pit is still too full. Please use what's currently there.";
