@@ -142,7 +142,7 @@ public class PitCommand extends BaseCommand {
 	@Cmd(value="Refills the given pit.", permission="pit.use")
     @Flag(name = "o", description = "Refills the pit regardless of cooldown or saturation.", permission = "pit.edit")
     public void fill(CommandSender sender, ResourcePit pit) {
-        pit.fill(sender, hasFlag("o"));
+        msg(pit.fill(sender, hasFlag("o")));
 	}
 
 
