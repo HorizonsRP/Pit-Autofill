@@ -291,62 +291,52 @@ public class ResourcePit {
 	So long as there're no players in the pit, fill it. If there are
 	players, return a message to the sender as such.
 	 */
-	public void fill(CommandSender sender, boolean override) {
+	public String fill(CommandSender sender, boolean override) {
+		final String output;
 
-		ResourcePit pit = this;
-		BukkitRunnable refill = new BukkitRunnable() {
-			@Override
-			public void run() {
-				final String output;
+		if (regionIsNotNull()) {
+			if (!playersAreInside()) {
 
-				if (regionIsNotNull()) {
-					if (!playersAreInside()) {
+				float emptyCount = 0;
+				float totalCount = 0;
+				for (Location loc : getLocationList()) {
 
-						float emptyCount = 0;
-						float totalCount = 0;
-						for (Location loc : getLocationList()) {
+					Material existingMat = world.getBlockAt(loc).getType();
+					// If our existing material matches ANY ignored material, we count it as empty.
+					if (ResourcePit.plugin.getConfig().getStringList("ignored-materials").stream().anyMatch(key -> Material.matchMaterial(key).equals(existingMat))) {
+						emptyCount++;
+					}
+					totalCount++;
+				}
 
-							Material existingMat = world.getBlockAt(loc).getType();
-							// If our existing material matches ANY ignored material, we count it as empty.
-							if (ResourcePit.plugin.getConfig().getStringList("ignored-materials").stream().anyMatch(key -> Material.matchMaterial(key).equals(existingMat))) {
-								emptyCount++;
-							}
-							totalCount++;
-						}
+				if (override || ((1f - (emptyCount / totalCount)) <= ((float) refillValue) / 100f)) {
+					removeLocks();
 
-						if (override || ((1f - (emptyCount / totalCount)) <= ((float) refillValue) / 100f)) {
-							pit.removeLocks();
-
-							if (pit.cooldown > 0 && pit.lastUse != null && !override) {
-								// Subtract the last use plus the cooldown from the current time to check the diff
-								long remainingTime = (pit.lastUse + (pit.cooldown*1000)) - System.currentTimeMillis();
-								if (remainingTime <= 0) {
-									output = pit.changeBlocks(sender, false);
-								} else {
-									output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOR + ((remainingTime / 1000) + 1) + " seconds" + PitAutofill.PREFIX + ".";
-								}
-							} else {
-								output = pit.changeBlocks(sender, override);
-							}
+					if (cooldown > 0 && lastUse != null && !override) {
+						// Subtract the last use plus the cooldown from the current time to check the diff
+						long remainingTime = (lastUse + (cooldown * 1000)) - System.currentTimeMillis();
+						if (remainingTime <= 0) {
+							output = changeBlocks(sender, false);
 						} else {
-							output = "The pit is still too full. Please use what's currently there.";
+							output = "That pit is still on cooldown for " + PitAutofill.ALT_COLOR + ((remainingTime / 1000) + 1) + " seconds" + PitAutofill.PREFIX + ".";
 						}
 					} else {
-						output = "There are still players inside the pit.";
+						output = changeBlocks(sender, override);
 					}
 				} else {
-					output = "No region specified for that pit.";
+					output = "The pit is still too full. Please use what's currently there.";
 				}
-
-				if (output != null) {
-					sender.sendMessage(PitAutofill.PREFIX + output);
-				} else {
-					sender.sendMessage(PitAutofill.PREFIX + "Successfully filled the pit '" + PitAutofill.ALT_COLOR + name.toUpperCase() + PitAutofill.PREFIX + "'.");
-				}
+			} else {
+				output = "There are still players inside the pit.";
 			}
-		};
-
-		refill.runTaskAsynchronously(PitAutofill.get());
+		} else {
+			output = "No region specified for that pit.";
+		}
+		if (output != null) {
+			return output;
+		} else {
+			return "Successfully filled the pit '" + PitAutofill.ALT_COLOR + name.toUpperCase() + PitAutofill.PREFIX + "'.";
+		}
 	}
 
 	// Returns true if there are any players inside the pit.
