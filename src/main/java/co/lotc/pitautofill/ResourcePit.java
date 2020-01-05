@@ -428,7 +428,9 @@ public class ResourcePit {
 				save();
 			}
 
-			plugin.getLogger().info(name + " pit filled by " + sender.getName() + ".");
+			if (sender != null) {
+				plugin.getLogger().info(name + " pit filled by " + sender.getName() + ".");
+			}
 
 			// Omniscience Logging
 			if (sender instanceof Player) {

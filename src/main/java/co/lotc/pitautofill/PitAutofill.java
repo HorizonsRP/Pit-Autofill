@@ -55,6 +55,8 @@ public class PitAutofill extends JavaPlugin {
         Commands.build(getCommand("pit"), PitCommand::new);
 
         registerOmniEvent();
+
+        checkPitRefills();
     }
 
     @Override
@@ -170,6 +172,12 @@ public class PitAutofill extends JavaPlugin {
 
     public File getPitFile(String pitName) {
         return new File(new File(getDataFolder(), "pits"), pitName.toUpperCase() + ".yml");
+    }
+
+    public void checkPitRefills() {
+        for (ResourcePit pit : allPitsList) {
+            pit.fill(null, true);
+        }
     }
 
 }
