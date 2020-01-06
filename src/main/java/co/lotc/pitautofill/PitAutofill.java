@@ -176,7 +176,7 @@ public class PitAutofill extends JavaPlugin {
 
     public void checkPitRefills() {
         for (ResourcePit pit : allPitsList) {
-            pit.fill(null, true);
+            pit.fill(null, false);
         }
     }
 
