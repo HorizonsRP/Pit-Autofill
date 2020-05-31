@@ -62,8 +62,8 @@
             </snapshots>
         </repository>
         <repository>
-            <id>lotc-release</id>
-            <url>https://repo.lordofthecraft.net/artifactory/lotc-repository</url>
+            <id>dre2n-repo</id>
+            <url>http://feuerstern.bplaced.net/repo/</url>
         </repository>
     </repositories>
 
@@ -77,24 +77,24 @@
         <dependency>
             <groupId>net.lordofthecraft</groupId>
             <artifactId>OmniscienceAPI</artifactId>
-            <version>1.0.3</version>
+            <version>1.1</version>
         </dependency>
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-bukkit</artifactId>
-            <version>7.0.0</version>
+            <version>7.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-bukkit</artifactId>
-            <version>7.0.0</version>
+            <version>7.0.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>co.lotc</groupId>
             <artifactId>tythan-bukkit</artifactId>
-            <version>0.7.1</version>
+            <version>0.7.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
