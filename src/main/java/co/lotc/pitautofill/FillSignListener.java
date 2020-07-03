@@ -11,10 +11,32 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
+import java.util.EnumSet;
+
 public class FillSignListener implements Listener {
 
 	private final static String SIGN_IDENTIFIER = "[Refill]";
 	private final PitAutofill plugin;
+
+	private final static EnumSet<Material> signs;
+	static {
+		signs = EnumSet.of(Material.OAK_SIGN);
+		signs.add(Material.OAK_WALL_SIGN);
+		signs.add(Material.SPRUCE_SIGN);
+		signs.add(Material.SPRUCE_WALL_SIGN);
+		signs.add(Material.BIRCH_SIGN);
+		signs.add(Material.BIRCH_WALL_SIGN);
+		signs.add(Material.JUNGLE_SIGN);
+		signs.add(Material.JUNGLE_WALL_SIGN);
+		signs.add(Material.DARK_OAK_SIGN);
+		signs.add(Material.DARK_OAK_WALL_SIGN);
+		signs.add(Material.ACACIA_SIGN);
+		signs.add(Material.ACACIA_WALL_SIGN);
+		signs.add(Material.CRIMSON_SIGN);
+		signs.add(Material.CRIMSON_WALL_SIGN);
+		signs.add(Material.WARPED_SIGN);
+		signs.add(Material.WARPED_WALL_SIGN);
+	}
 
 	FillSignListener(PitAutofill plugin) {
 		this.plugin = plugin;
@@ -30,9 +52,7 @@ public class FillSignListener implements Listener {
 			if (block != null) {
 
 				// RClick && Either Sign Type
-				if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) &&
-					(block.getType().equals(Material.WALL_SIGN) ||
-					 block.getType().equals(Material.SIGN))) {
+				if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && signs.contains(block.getType())) {
 
 					Sign sign = (Sign) block.getState();
 					if (sign.getLine(1).equalsIgnoreCase(SIGN_IDENTIFIER)) {
