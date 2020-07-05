@@ -70,12 +70,6 @@ public class PitAutofill extends JavaPlugin {
                 .mapperWithSender((sender, name) -> getPit(name))
                 .register();
 
-        Commands.defineArgumentType(World.class)
-                .defaultName("World")
-                .defaultError("Failed to find a world by that name.")
-                .completer(() -> Bukkit.getWorlds().stream().map(World::getName).collect(Collectors.toList()))
-                .mapperWithSender((sender, name) -> Bukkit.getWorld(name))
-                .register();
     }
 
     // Alert Omniscience to a logging type.
