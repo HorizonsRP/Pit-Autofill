@@ -6,7 +6,6 @@
 
     <groupId>co.lotc</groupId>
     <artifactId>pit-autofill</artifactId>
-    <name>Pit Autofill</name>
     <version>1.16.0.1</version>
     <packaging>jar</packaging>
 
