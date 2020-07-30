@@ -6,6 +6,7 @@
 
     <groupId>co.lotc</groupId>
     <artifactId>pit-autofill</artifactId>
+    <name>Pit Autofill</name>
     <version>1.16.0.1</version>
     <packaging>jar</packaging>
 
@@ -22,7 +23,7 @@
 
     <build>
         <defaultGoal>clean package</defaultGoal>
-        <finalName>${project.artifactId}</finalName>
+        <finalName>${project.name}-${project.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
